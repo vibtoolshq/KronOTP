@@ -1,6 +1,6 @@
 # Engine Function-Level Technical Reference
 
-Verified against `javascript/src/kron-otp.js` and `python/src/kron_otp.py`, published version `1.0.0` (baseline `50df7c4`). Methods listed are **existing** methods, not planned APIs.
+Verified against `javascript/src/kron-otp.js` and `python/src/kron_otp.py` on development `main` after P01 (frozen baseline `b4192dc`). Published `1.0.0` packages retain their historical input contracts. Methods listed are **existing** methods, not planned APIs.
 
 ## JavaScript: `javascript/src/kron-otp.js`
 
@@ -8,13 +8,13 @@ Verified against `javascript/src/kron-otp.js` and `python/src/kron_otp.py`, publ
 | --- | --- | --- | --- |
 | `const OTPAuth = require('otpauth')` | Module import | Package → object | Uses third-party Secret/TOTP primitives to compute HMAC SHA-1 OTP values |
 | `class KronOTP` | Public export | Class | Stateless static-method facade |
-| `static #createTOTP(secret)` | Private | Base32 string → configured `OTPAuth.TOTP` | Rejects non-strings, removes all JS-regex whitespace, uppercases, validates alphabet/length/padding, decodes and checks canonical Base32; configures SHA1/6/30 |
+| `static #createTOTP(secret)` | Private | Base32 string → configured `OTPAuth.TOTP` | Rejects non-strings and raw >4096 chars, removes ASCII whitespace only, rejects non-ASCII characters before uppercasing, caps compact input at 1024 chars, validates canonical Base32 and decoded key >=14 bytes; configures SHA1/6/30 |
 | `static generate(secret)` | Public | Base32 string → six-character string | Builds TOTP and invokes library `.generate()` at the current system time |
-| `static verify(secret, token)` | Public | Base32 string, six-digit string → boolean | First creates configured TOTP (therefore validates secret); rejects non-string or non-six-digit tokens; `.validate({token, window:1}) !== null` |
+| `static verify(secret, token)` | Public | Base32 string, six-digit string → boolean | Checks token type/six-digit ASCII format first; returns false for expected invalid keys; `.validate({token, window:1}) !== null` |
 | `module.exports = KronOTP` | Public export | CommonJS import → class | Enables `const KronOTP = require('kron-otp')` |
 | `module.exports.KronOTP = KronOTP` | Public export | Named CommonJS property | Enables `const {KronOTP} = require('kron-otp')` |
 
-Errors: non-string/malformed/non-canonical Base32 yields **TypeError**; invalid token format yields **false** if secret is valid. Empty input is invalid. The JavaScript wrapper does **not** enforce a minimum decoded length of 14 bytes; an 80-bit Base32 demo key can pass here.
+Errors: `generate` rejects missing/non-string, malformed, <14-byte or oversized Base32 with sanitized **TypeError**. `verify` returns **false** for expected malformed inputs. Accepted whitespace is ASCII `space/tab/CR/LF/FF/VT` only. Raw length max 4096; compact length max 1024. This changes the old JavaScript `v1.0.0` behavior for invalid secrets.
 
 ## Python: `python/src/kron_otp.py`
 
@@ -22,8 +22,8 @@ Errors: non-string/malformed/non-canonical Base32 yields **TypeError**; invalid 
 | --- | --- | --- | --- |
 | `import base64, binascii, hashlib, re, pyotp` | Imports | Dependencies | Base32 canonicalization, SHA-1 digest selection, token regex, TOTP library |
 | `class KronOTP` | Public import | Class | Stateless static-method facade |
-| `@staticmethod _normalize_secret(secret: str) -> str` | Internal | Base32 string → normalized unpadded Base32 | Rejects non-string/invalid characters, normalizes via Python `split()`/uppercase, validates canonical encoding by Base32 decode/re-encode |
-| `@staticmethod _totp(secret: str) -> pyotp.TOTP` | Internal | Base32 string → configured TOTP | Calls normalization, configures digits=6, interval=30, digest=SHA1; PyOTP itself enforces decoded minimum length |
+| `@staticmethod _normalize_secret(secret: str) -> str` | Internal | Base32 string → normalized unpadded Base32 | Rejects non-string/invalid characters, normalizes ASCII whitespace via `re.sub`/uppercase, rejects non-ASCII before uppercasing; checks raw/compact limits and >=14 decoded bytes; validates canonical encoding by Base32 decode/re-encode |
+| `@staticmethod _totp(secret: str) -> pyotp.TOTP` | Internal | Base32 string → configured TOTP | Calls normalization, configures digits=6, interval=30, digest=SHA1; both wrapper and PyOTP enforce >=14 decoded bytes |
 | `@staticmethod generate(secret: str) -> str` | Public | Base32 string → six-character string | Invokes `.now()`; translates expected invalid-secret exceptions to `ValueError` |
 | `@staticmethod verify(secret: str, token: str) -> bool` | Public | Base32 string, token → boolean | Returns false on invalid token, normalized/decoded invalid secret, or OTP mismatch; calls `.verify(valid_window=1)` |
 
@@ -37,14 +37,14 @@ Errors: non-string/malformed/non-canonical Base32 yields **TypeError**; invalid 
 | Algorithm | SHA-1 | SHA-1 |
 | Period | 30 seconds | 30 seconds |
 | Verification tolerance | ±one time step | ±one time step |
-| Secret case/whitespace | Removes JS regex whitespace, uppercases | Removes Python `split()` whitespace, uppercases |
+| Secret case/whitespace | Both ignore ASCII space, tab, CR, LF, FF, VT; reject U+FEFF and non-ASCII characters before uppercasing | Same |
 | Bad generated secret | Throws `TypeError` | Throws `ValueError` |
-| Bad verify secret | Throws `TypeError` | Returns `False` |
-| Bad verify token | Returns `false` when secret valid | Returns `False` |
-| 80-bit canonical Base32 | Accepted in current JS runtime | Rejected by PyOTP >=2.12 |
+| Bad verify secret | Returns `false` | Returns `False` |
+| Bad verify token | Returns `false` | Returns `False` |
+| 80-bit canonical Base32 | Rejected (P01) | Rejected |
 | 160-bit canonical Base32 | Supported | Supported |
 
-**Important:** This mismatch is documented, not fixed by the documentation phase. Upgrading/downgrading dependencies or unifying contracts needs a separate scoped implementation and regression test.
+**P01 input contract:** Both enforce >=14 decoded bytes; <=4096 raw chars, <=1024 chars after ASCII-whitespace removal; malformed secrets rejected by `generate` and treated as nonmatches by `verify`. Use a cryptographically random >=20-byte secret for new account provisioning. **Remaining:** Python verification at Unix epoch first 30 seconds is a known P02 issue. This is the development `main` contract, NOT yet a published update to registry v1.0.0.
 
 ## Consumer inputs and usage
 

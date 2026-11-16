@@ -1,4 +1,6 @@
-# Usage Guide & Troubleshooting — KronOTP v1.0.0
+# Usage Guide & Troubleshooting — Development `main` P01
+
+**Important:** The published npm and PyPI packages `1.0.0` have not been republished; this page documents P01 behavior in `main`, not yet available through a new registry release.
 
 ## What kind of product is this?
 
@@ -57,9 +59,9 @@ else:
 | `ModuleNotFoundError: kron_otp` | Install the Python distribution in the **same interpreter/venv** running the code; import uses underscore `kron_otp`, not hyphen |
 | OTP is six digits but remote login rejects it | Check shared secret, SHA-1/6-digit/30-second service compatibility, synchronized system clocks, user/account linkage, expired step and server-side policy. KronOTP cannot bypass a service's requirements |
 | Missing/invalid Base32 secret | Use the provisioning **shared secret**, not a QR image URL, password or current six-digit code; the engine normalizes whitespace/case but rejects invalid Base32 |
-| Demo key works on JS, fails on Python | Old public `JBSWY3DPEHPK3PXP` demo is 80-bit; PyOTP >=2.12 requires at least 112 bits. Use 160-bit or longer authorized Base32 secret |
+| Legacy short key fails on both engines in development `main` | P01 now rejects keys below 14 decoded bytes in both languages; the published npm `1.0.0` previously accepted some short keys. Re-provision weak legacy credentials securely before upgrading; use random 20+ byte secrets for new accounts |
 | `verify` returns false | Wrong token, wrong time, wrong secret or invalid format. Tokens must be **strings** with exactly six ASCII digits, including any leading zero |
-| Verification throws `TypeError` in JS | JS validates the secret *before* token format; invalid secrets throw. Python `verify` instead returns False on handled invalid-secret inputs |
+| Invalid Base32 or too-long input on development `main` | Both engines reject >4096 raw chars, >1024 cleaned chars or <14 decoded bytes. `generate` throws TypeError (JS)/ValueError (Python), `verify` returns false/False. Only ASCII whitespace is ignored; Unicode BOM/NBSP is invalid |
 | npm/PyPI install temporarily fails after a release | Public registry metadata/tarball distribution may propagate; inspect official registry version and download availability. Do not repeatedly publish an identical version |
 | Want a QR scanner, UI button, web page or token store | Not provided by KronOTP. Add the UX/storage in your own authorized application; do not assume built-in support |
 | Accidentally logged a secret | Treat it as compromised: remove from logs and rotate/regenerate the account's shared secret using its legitimate provisioning process |
@@ -71,3 +73,10 @@ Use [Automation & Publishing](./AUTOMATION_AND_PUBLISHING.md) for Playwright, Pu
 ## Safe operation
 
 Do not embed real secrets in screenshots, CI logs, code, tracked Markdown or error reports. Token generation/verification alone does not replace first-factor authentication, permission checks, replay prevention or account security controls.
+
+## P01 development-source migration note
+
+- The source on `main` changes JavaScript `verify(badSecret, token)` from a thrown `TypeError` to a nonmatch (`false`). Avoid relying on the old exception path when integrating a future release.
+- Both engines reject short (<14 decoded bytes), oversized and non-ASCII-whitespace-containing secrets. 14–19 decoded-byte keys remain accepted for compatibility with existing PyOTP deployments; use random >=20 bytes for new provisioning.
+- Input bounds: 4096 raw characters; 1024 compact Base32 characters including legal `=` padding. Normal SHA-1/6-digit/30-second verification is unchanged; Python epoch-start bug is not fixed until P02.
+- The current public `1.0.0` registry packages are unchanged; do not claim P01 is already published.

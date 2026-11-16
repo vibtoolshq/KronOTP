@@ -9,44 +9,62 @@ import re
 
 import pyotp
 
+# Match the Node runtime's bounded, ASCII-only Base32 acceptance contract.
+_MIN_SECRET_BYTES = 14
+_MAX_RAW_SECRET_LENGTH = 4096
+_MAX_BASE32_LENGTH = 1024
+_INVALID_SECRET = "Invalid TOTP secret: expected valid Base32 of an accepted size."
+
 
 class KronOTP:
     """Generate and verify standard six-digit, 30-second SHA-1 TOTP codes."""
 
     @staticmethod
     def _normalize_secret(secret: str) -> str:
-        """Normalize Base32 input and reject invalid or non-canonical keys."""
+        """Normalize ASCII Base32 input and reject invalid, weak, or oversized keys."""
         if not isinstance(secret, str):
             raise ValueError("TOTP secret must be a Base32 string.")
+        if len(secret) > _MAX_RAW_SECRET_LENGTH:
+            raise ValueError(_INVALID_SECRET)
 
-        # Ignore whitespace and case; retain no copy of the raw secret in errors.
-        cleaned = "".join(secret.split()).upper()
+        # Only ASCII whitespace is ignored; reject non-ASCII before uppercasing.
+        compact = re.sub(r"[ \t\n\r\f\v]+", "", secret)
+        if (
+            len(compact) > _MAX_BASE32_LENGTH
+            or re.fullmatch(r"[A-Za-z2-7=]+", compact) is None
+        ):
+            raise ValueError(_INVALID_SECRET)
+
+        cleaned = compact.upper()
         unpadded = cleaned.rstrip("=")
         padding_count = len(cleaned) - len(unpadded)
         remainder = len(unpadded) % 8
         required_padding = (-len(unpadded)) % 8
 
         if (
-            not re.fullmatch(r"[A-Z2-7]+", unpadded)
+            re.fullmatch(r"[A-Z2-7]+", unpadded) is None
             or remainder not in (0, 2, 4, 5, 7)
             or (padding_count and padding_count != required_padding)
         ):
-            raise ValueError("Invalid TOTP secret: expected valid Base32.")
+            raise ValueError(_INVALID_SECRET)
 
         try:
             decoded = base64.b32decode(unpadded + "=" * required_padding)
         except (binascii.Error, ValueError):
-            raise ValueError("Invalid TOTP secret: expected valid Base32.") from None
+            raise ValueError(_INVALID_SECRET) from None
 
-        # Reject altered encodings (including nonzero unused padding bits).
-        if not decoded or base64.b32encode(decoded).decode("ascii").rstrip("=") != unpadded:
-            raise ValueError("Invalid TOTP secret: expected valid Base32.")
+        # PyOTP 2.12+ requires >=14 decoded bytes; enforce it at wrapper boundary.
+        if (
+            len(decoded) < _MIN_SECRET_BYTES
+            or base64.b32encode(decoded).decode("ascii").rstrip("=") != unpadded
+        ):
+            raise ValueError(_INVALID_SECRET)
 
         return unpadded
 
     @staticmethod
     def _totp(secret: str) -> pyotp.TOTP:
-        """Create the same TOTP configuration as the JavaScript module."""
+        """Create the same fixed configuration as the JavaScript module."""
         return pyotp.TOTP(
             KronOTP._normalize_secret(secret),
             digits=6,
@@ -60,11 +78,11 @@ class KronOTP:
         try:
             return KronOTP._totp(secret).now()
         except (TypeError, ValueError, binascii.Error):
-            raise ValueError("Invalid TOTP secret: expected valid Base32.") from None
+            raise ValueError(_INVALID_SECRET) from None
 
     @staticmethod
     def verify(secret: str, token: str) -> bool:
-        """Verify a code with a one-step (±30-second) clock-drift window."""
+        """Verify with a one-step (±30-second) drift window; invalid input is False."""
         if not isinstance(token, str) or re.fullmatch(r"[0-9]{6}", token) is None:
             return False
 

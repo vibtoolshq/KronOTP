@@ -38,3 +38,12 @@ Commit SHA | GitHub/Local baseline | Release tag (if any) | Gaps | CLOSED / BLOC
 - **Verification evidence**: three private notes ignored under `.gitignore:49:/notes/`; `git ls-files notes` returned no paths; root GitHub file tree contained no `notes/`; local `main` and `origin/main` matched and status was clean after the fast-forward pull; `git diff --check` passed.
 - **Existing functionality**: JavaScript/Python engine sources, package manifests, tests, release workflows and published v1.0.0 tag were not modified. CI workflows' configured path filters did not trigger for this documentation-only commit.
 - **Follow-up**: This row records the initial implementation SHA and tested state. The commit that adds this close-out record is discoverable from `git log -- project/DEVELOPMENT_LOG.md`; the commit cannot include its own SHA without changing that SHA.
+
+## 2026-11-16 — Production Hardening P01: Secret input & error handling
+
+- **Incoming baseline:** `b4192dc252b2a46b83bc053deea65c7b224f42b4`.
+- **Scope lock:** KO-001, KO-003, KO-004, KO-008 only; JS/Python secret validation, input caps, ASCII whitespace and expected invalid-input contract.
+- **Implementation:** JS+Python reject decoded Base32 keys <14 bytes; raw length >4096 or whitespace-compacted length >1024; normalize only ASCII space/tab/CR/LF/FF/VT, reject Unicode case-fold surprises and noncanonical padding; JS `verify` now returns false rather than TypeError for expected malformed secret. Normal SHA-1/6-digit/30-second ±1 step remains.
+- **Compatibility:** JS callers using short keys or expecting verify to throw must migrate. Python's previously accepted exotic Unicode whitespace is now rejected. This is a development `main` change; npm/PyPI `1.0.0` unchanged. No new version/tag/publish.
+- **Actual files:** `javascript/src/kron-otp.js`, `python/src/kron_otp.py`, both test files, affected `project/` and `docs/` reference and module READMEs.
+- **Validation and commit evidence:** See the associated Git commit and `git log -- project/DEVELOPMENT_LOG.md`; final CI job IDs and close-out state belong in local private phase note, not fabricated here. P02 epoch bug and P03/P04 security/CI requirements remain open.

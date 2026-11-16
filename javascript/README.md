@@ -22,8 +22,8 @@ console.log('Verification:', valid);
 ```
 
 - `generate(secret)` returns a six-digit string, or throws `TypeError` for a malformed Base32 secret.
-- `verify(secret, token)` returns `true` or `false` for a six-digit string, with ±one 30-second step tolerated. Invalid secrets throw `TypeError`.
-- Configuration: SHA-1, 6 digits, 30-second period. Secrets are normalized by removing whitespace and uppercasing.
+- On development `main` after P01, `verify(secret, token)` returns `true`/`false`, including `false` for an invalid secret. Previously published `1.0.0` throws `TypeError` for invalid secrets (a breaking migration consideration).
+- Configuration remains SHA-1, 6 digits and 30 seconds. P01 `main`: canonical ASCII Base32, >=14 decoded bytes (112 bits), <=4096 raw chars and <=1024 cleaned chars, only ASCII space/tab/CR/LF/FF/VT removed; `generate` rejects invalid keys with sanitized `TypeError`. Recommend cryptographically random >=20-byte secrets for provisioning.
 - Supported Node.js: 20.19+ (dependency requirement).
 
 ## Local tests
@@ -38,3 +38,5 @@ Only use provisioning secrets for accounts you own or are authorized to automate
 See the [integration and publishing guide](../docs/AUTOMATION_AND_PUBLISHING.md).
 
 Licensed under the [MIT License](./LICENSE).
+
+**Release distinction:** Source-tree P01 input fixes are not yet published. `npm install kron-otp@1.0.0` still uses its original validation and error contract until a separately authorized release.

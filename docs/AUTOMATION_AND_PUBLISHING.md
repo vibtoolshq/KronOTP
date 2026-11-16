@@ -173,8 +173,8 @@ Run `python selenium_2fa.py` with the same four environment variables supplied s
 
 - Both `generate` methods return a **string**, preserving leading zeroes.
 - Verification accepts a six-character string and a one-step (±30-second) clock tolerance. Invalid tokens return `false`/`False`.
-- For malformed secrets, JavaScript throws `TypeError`; Python `generate` throws `ValueError` and Python `verify` returns `False`. Check errors without exposing the secret.
-- The repository's sample key `JBSWY3DPEHPK3PXP` is **too short** for the currently resolved PyOTP version (2.12+); use a suitable shared secret instead.
+- **Development `main` after P01:** malformed secrets cause JavaScript `generate` to throw `TypeError` and Python `generate` to raise `ValueError`; both `verify` methods return false/False. Both require >=14 decoded bytes, allow only ASCII whitespace and cap input sizes. Previously published registry `1.0.0` remains unchanged and JS verify can still throw on invalid secrets. Never expose secrets in errors.
+- Legacy sample key `JBSWY3DPEHPK3PXP` is 80-bit. In P01 development `main`, **both** engines reject it; the historical published npm `1.0.0` may accept it. Use a securely generated >=160-bit secret for new provisioning.
 - Automation should never treat a generated code as proof of a successful login; assert the resulting authenticated state explicitly.
 
 ## 2. Publishing Guide
