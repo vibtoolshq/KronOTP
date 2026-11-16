@@ -6,11 +6,9 @@ on:
       - 'javascript/**'
       - 'python/**'
       - '.github/workflows/ci.yml'
-  pull_request:
-    paths:
-      - 'javascript/**'
-      - 'python/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/registry-smoke.yml'
+  pull_request: {}
 
 permissions:
   contents: read
@@ -39,9 +37,13 @@ jobs:
             javascript:
               - 'javascript/**'
               - '.github/workflows/ci.yml'
+              - '.github/workflows/release.yml'
+              - '.github/workflows/registry-smoke.yml'
             python:
               - 'python/**'
               - '.github/workflows/ci.yml'
+              - '.github/workflows/release.yml'
+              - '.github/workflows/registry-smoke.yml'
 
   javascript:
     name: JavaScript tests
@@ -85,3 +87,43 @@ jobs:
         env:
           PYTHONPATH: .
         run: python tests/test_kron_otp.py
+
+  required:
+    name: Required CI
+    # The only stable protection check: always runs on PRs, including docs-only.
+    if: always()
+    needs: [changes, javascript, python]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce selected engine checks
+        shell: bash
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          JAVASCRIPT_RESULT: ${{ needs.javascript.result }}
+          PYTHON_RESULT: ${{ needs.python.result }}
+          JAVASCRIPT_CHANGED: ${{ needs.changes.outputs.javascript }}
+          PYTHON_CHANGED: ${{ needs.changes.outputs.python }}
+        run: |
+          set -euo pipefail
+          [[ "$CHANGES_RESULT" == "success" ]] || {
+            echo "::error::Change detection did not succeed"; exit 1;
+          }
+          if [[ "$JAVASCRIPT_CHANGED" == "true" ]]; then
+            [[ "$JAVASCRIPT_RESULT" == "success" ]] || {
+              echo "::error::Required JavaScript tests did not pass"; exit 1;
+            }
+          else
+            [[ "$JAVASCRIPT_RESULT" == "skipped" ]] || {
+              echo "::error::Unexpected JavaScript check result"; exit 1;
+            }
+          fi
+          if [[ "$PYTHON_CHANGED" == "true" ]]; then
+            [[ "$PYTHON_RESULT" == "success" ]] || {
+              echo "::error::Required Python tests did not pass"; exit 1;
+            }
+          else
+            [[ "$PYTHON_RESULT" == "skipped" ]] || {
+              echo "::error::Unexpected Python check result"; exit 1;
+            }
+          fi
+          echo "Required CI passed for this change set."

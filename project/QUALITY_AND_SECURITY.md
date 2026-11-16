@@ -70,3 +70,7 @@ Mark each claim as observed from source, CI log, or direct test. Use PASS/FAIL/S
 - Version-aware registry downloads and exact version assertions confirmed for public `1.0.0` by [43855173893](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173893), plus 7 local positive/negative resolver tests. Different future versions will require their own public artifact check.
 - Tag-push-only release jobs, current-main-head check and commit-pinned actions validated in release branch run [43855173879](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173879), with publishers SKIPPED.
 - **KO-007 remains open:** no actual enforced branch/tag protection. GitHub `main protected:false`, rulesets `[]` and protection read 403; code-only guards are insufficient against unauthorized tag creation/repo edits. P03 cannot be fully closed before admin verification or explicit risk acceptance.
+
+### P03 required-check corrective audit finding
+
+Conditional CI without an always-present PR check could block docs-only PRs when required by branch protection. The P03 scope-locked follow-up added `Required CI` (unconditional PR coverage + fail-closed affected-language gate). No crypto/API/test runtime change; actual GitHub Settings protection remains unconfigured/blocked.

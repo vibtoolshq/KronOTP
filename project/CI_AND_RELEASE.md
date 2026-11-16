@@ -52,3 +52,9 @@ Log any workflow/package change in `project/DEVELOPMENT_LOG.md`, keep `project/F
 - Offline version-selection negative tests: 7/7 correctly handled (valid 1.0.0, push fallback accepted; malformed v-prefix, prerelease, newline/injection, shell expression and empty input rejected). This is not a live nonexistent-version registry test.
 - **P03 status: BLOCKED — governance**. GitHub main `protected:false`, rulesets `[]`, branch-protection endpoint 403; there is no API write permission to enforce or verify main/tag restrictions. Only the workflow/code portion was verified. NO security sign-off or exception assumed.
 - Neither package published; no new tag, version bump, credentials or engine changes. Repo admin must configure effective branch/tag controls and provide independently verified evidence before phase can close.
+
+### P03 post-patch CI protection compatibility correction
+
+The source CI workflow now runs on **every pull request** so a stable status exists for documentation-only changes. It retains language-selective Node/Python jobs, includes changes to all three workflow YAMLs in both language filters, and adds a mandatory `Required CI` aggregation job that runs even when individual engines are skipped. The gate fails if changed-language jobs fail or if detection does not succeed; it passes docs-only PRs only when both language jobs are correctly skipped. An authorized admin can select **Required CI** as a main branch protection status check, using the exact context shown by GitHub after CI completion.
+
+**External gate unchanged:** this YAML is a check producer, not a main protection rule. Main/tag rulesets must still be configured in GitHub Settings; P03 remains BLOCKED until effective protection can be verified.

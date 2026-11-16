@@ -100,3 +100,7 @@ No new tag, package version, registry upload, credential rotation or production 
 - [Release validation 43855173879](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173879): full validation PASS, **npm/PyPI publication SKIPPED** because no version tag was pushed.
 
 **Not a closed release-security phase:** Current GitHub repo has no effective main/tag protection verified (`main protected:false`, rulesets `[]`, protection endpoint 403). An authorized admin must enable and verify those controls (or explicitly accept the risk) before declaring P03 CLOSED; no change was made to engine source, published packages or tags.
+
+### P03 required-check administration guidance
+
+For main branch protection, choose the **Required CI** status from the `KronOTP CI` workflow, rather than individual conditional JavaScript/Python jobs: it is available on all pull requests including docs-only, and fails when a selected engine test fails. Verify its exact displayed check name and source app in GitHub Settings before enforcing. For changes to release/registry workflow files, both engine suites now run through CI. Administrative main/tag protection must still be enabled separately.
