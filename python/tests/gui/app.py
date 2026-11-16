@@ -356,6 +356,11 @@ class Authenticator(tk.Tk):
         self.progress.configure(value=remaining)
 
     def _tick(self):
+        # A test or another UI callback may request a tick before the prior
+        # after() fires. Keep exactly one scheduled callback per window.
+        if self._timer_job is not None:
+            self.after_cancel(self._timer_job)
+            self._timer_job = None
         if not self._locked and self._entries():
             if time.monotonic() - self._last_activity >= IDLE_LOCK_SECONDS:
                 self._privacy_lock(auto=True)
@@ -615,7 +620,9 @@ class Authenticator(tk.Tk):
         self._set_status("OTP copied. Clipboard clears in 15s if unchanged.")
 
     def _clear_owned_clipboard(self):
-        self._clipboard_job = None
+        if self._clipboard_job is not None:
+            self.after_cancel(self._clipboard_job)
+            self._clipboard_job = None
         if self._clipboard_code is None:
             return
         copied = self._clipboard_code
