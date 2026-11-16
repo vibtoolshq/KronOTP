@@ -74,3 +74,7 @@ Mark each claim as observed from source, CI log, or direct test. Use PASS/FAIL/S
 ### P03 required-check corrective audit finding
 
 Conditional CI without an always-present PR check could block docs-only PRs when required by branch protection. The P03 scope-locked follow-up added `Required CI` (unconditional PR coverage + fail-closed affected-language gate). No crypto/API/test runtime change; actual GitHub Settings protection remains unconfigured/blocked.
+
+## v2.0.0 release exception (risk not eliminated)
+
+The owner directed an expedited major-version release with GitHub main/`v*` tag rulesets deferred and P04 production assurance still not executed. The missing GitHub governance controls KO-007 remain open; passing engine tests, registry smoke and tag validation do not establish end-to-end supply-chain security, independent CVE absence, OS/minimum-runtime support or relying-party replay/throttle protections. This exception must not be presented as a security certification.

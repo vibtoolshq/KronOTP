@@ -88,3 +88,10 @@ Commit SHA | GitHub/Local baseline | Release tag (if any) | Gaps | CLOSED / BLOC
 
 - P03 patch audit found documentation-only pull requests would not receive an available required check with the original path-filtered PR trigger. Changed `.github/workflows/ci.yml` only to always run detection on PRs, run Node/Python selectively, and aggregate affected checks under a single `Required CI` job; CI workflow/release/smoke YAML changes trigger both engines.
 - This does **not** configure repository protection. Full P03 remains BLOCKED on GitHub main/tag settings even if corrective CI is green. Final follow-up commit and CI run are recorded in local private notes/Git history.
+
+## 2026-11-16 — Expedited v2.0.0 release preparation
+
+- **Incoming baseline:** `e4ff4bc4a318f75829856db2716ee3cb57188f51`; published v1.0.0 historical tag preserved.
+- **Owner authorization:** user explicitly requested to bypass/defer GitHub main/tag governance protection and release now. P03's KO-007 stays OPEN; P04 remains NOT TESTED. This is an exception to the five-phase sequence, not an assertion all phases are CLOSED.
+- **Versioning:** bump npm `kron-otp` and PyPI `kron-otp` from 1.0.0 to **2.0.0** (major due to JS verify-error contract and weak-secret acceptance breaking changes); synchronize npm lockfile root version. Update user/technical docs and migration warnings in same source-controlled preparation commit.
+- **Scope:** metadata and truthful documentation only; engine source and tests, dependencies, CI/release workflow files, v1.0.0 tag unchanged. Actual publishing and public-artifact check outcomes should be added only after jobs complete.

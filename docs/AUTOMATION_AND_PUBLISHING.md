@@ -173,8 +173,8 @@ Run `python selenium_2fa.py` with the same four environment variables supplied s
 
 - Both `generate` methods return a **string**, preserving leading zeroes.
 - Verification accepts a six-character string and a one-step (±30-second) clock tolerance. Invalid tokens return `false`/`False`.
-- **Development `main` after P01:** malformed secrets cause JavaScript `generate` to throw `TypeError` and Python `generate` to raise `ValueError`; both `verify` methods return false/False. Both require >=14 decoded bytes, allow only ASCII whitespace and cap input sizes. Previously published registry `1.0.0` remains unchanged and JS verify can still throw on invalid secrets. Never expose secrets in errors.
-- Legacy sample key `JBSWY3DPEHPK3PXP` is 80-bit. In P01 development `main`, **both** engines reject it; the historical published npm `1.0.0` may accept it. Use a securely generated >=160-bit secret for new provisioning.
+- **v2.0.0:** malformed secrets cause JavaScript `generate` to throw `TypeError` and Python `generate` to raise `ValueError`; both `verify` methods return false/False. Both require >=14 decoded bytes, allow only ASCII whitespace and cap input sizes. Historical registry `1.0.0` remains unchanged and JS verify could throw on invalid secrets. Never expose secrets in errors.
+- Legacy sample key `JBSWY3DPEHPK3PXP` is 80-bit. In v2.0.0, **both** engines reject it; the historical published npm `1.0.0` may accept it. Use a securely generated >=160-bit secret for new provisioning.
 - Automation should never treat a generated code as proof of a successful login; assert the resulting authenticated state explicitly.
 
 ## 2. Publishing Guide
@@ -211,7 +211,7 @@ git tag -a "v$Version" -m "KronOTP v$Version"
 git push origin "v$Version"
 ~~~
 
-**Do not push a new tag until the planned release version, required publishing credentials and GitHub branch/tag protections are approved and verified. Published v1.0.0 must not be reused.** Both registries need publishing authority for `kron-otp`; a package name that is unavailable or owned by someone else will reject the upload. Each new release must bump **both** manifest versions and use a new matching tag (e.g. `v1.0.1`). Two separate registries are not atomic: one may publish even if the other rejects the upload. Inspect the release run before retrying; do not reuse an already published version.
+**Expedited v2.0.0 exception (explicit maintainer authorization):** repository main/tag protection has been deferred for this one release, not implemented or certified. Source release validation and publication checks still apply. Protect main/tag rules before future releases where practical; never re-use v1.0.0. Both registries need publishing authority for `kron-otp`; a package name that is unavailable or owned by someone else will reject the upload. Each new release must bump **both** manifest versions and use a new matching tag (e.g. `v1.0.1`). Two separate registries are not atomic: one may publish even if the other rejects the upload. Inspect the release run before retrying; do not reuse an already published version.
 
 ### 2.3 Publish `javascript/` to npm manually
 
@@ -290,3 +290,7 @@ Publishing now requires an actual **push of a valid `vX.Y.Z` tag** at the **curr
 The published-package smoke workflow accepts a **manual stable version** (such as `1.0.0`) and downloads/checks exactly that version from both registries; a workflow-file push defaults to matching manifest versions. This is verification, **not a new publication**.
 
 **External blocker:** P03 cannot assert GitHub branch/tag protection; main is currently unprotected, rulesets empty and the connected integration lacks access to protection settings. An authorized GitHub repo administrator must enable and verify effective main and `v*` tag safeguards before the release-security phase can be called complete. No engine logic or public package version was changed.
+
+### Expedited v2.0.0 release and compatibility
+
+A maintainer explicitly authorized v2.0.0 before GitHub branch/tag governance controls and P04 production acceptance were completed. This is a documented security-process exception, not proof of full production hardening. JavaScript v2.0.0 verifies expected invalid secrets by returning `false` rather than throwing; both languages reject Base32 secrets <14 decoded bytes, Unicode-only whitespace and oversized input. Python v2.0.0 fixes epoch-start token verification. The release workflow publishes only on a pushed new version tag matching current main and both manifests, and upload jobs are non-atomic; independently check npm and PyPI after publication. No UI, server state, throttling or replay protection is provided by the library.

@@ -40,11 +40,11 @@ Verified v1.0.0 test history:
 ## Installing a known published version
 
 ```sh
-npm install kron-otp@1.0.0
+npm install kron-otp@2.0.0
 ```
 
 ```sh
-python -m pip install kron-otp==1.0.0
+python -m pip install kron-otp==2.0.0
 ```
 
 Registries:
@@ -104,3 +104,7 @@ No new tag, package version, registry upload, credential rotation or production 
 ### P03 required-check administration guidance
 
 For main branch protection, choose the **Required CI** status from the `KronOTP CI` workflow, rather than individual conditional JavaScript/Python jobs: it is available on all pull requests including docs-only, and fails when a selected engine test fails. Verify its exact displayed check name and source app in GitHub Settings before enforcing. For changes to release/registry workflow files, both engine suites now run through CI. Administrative main/tag protection must still be enabled separately.
+
+## v2.0.0 expedited release boundary (2026-11-16)
+
+The owner explicitly authorized publication before the P03 GitHub branch/tag ruleset hardening and P04 production/OS/security acceptance matrix. That is a **recorded process exception**, not closure of KO-007 or completion of P04. The published v1.0.0 artifact remains immutable. This release candidate's manifest and tag versions must both be **2.0.0**, validated by Actions before registry upload. Source CI and the tag-release workflow test both engines; check npm and PyPI upload jobs and separately verify public v2.0.0 download/install. Passing prior v1.0.0 registry smoke is not evidence that v2.0.0 reached registries.

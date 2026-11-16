@@ -58,3 +58,10 @@ Log any workflow/package change in `project/DEVELOPMENT_LOG.md`, keep `project/F
 The source CI workflow now runs on **every pull request** so a stable status exists for documentation-only changes. It retains language-selective Node/Python jobs, includes changes to all three workflow YAMLs in both language filters, and adds a mandatory `Required CI` aggregation job that runs even when individual engines are skipped. The gate fails if changed-language jobs fail or if detection does not succeed; it passes docs-only PRs only when both language jobs are correctly skipped. An authorized admin can select **Required CI** as a main branch protection status check, using the exact context shown by GitHub after CI completion.
 
 **External gate unchanged:** this YAML is a check producer, not a main protection rule. Main/tag rulesets must still be configured in GitHub Settings; P03 remains BLOCKED until effective protection can be verified.
+
+## v2.0.0 expedited release candidate (explicit maintainer instruction, 2026-11-16)
+
+- Version bump in `javascript/package.json`, top-level/root package version in `javascript/package-lock.json`, and `python/pyproject.toml` to **2.0.0**. The original v1.0.0 tag stays immutable. This is **SemVer major** due to JS invalid-secret verification changing from exception to boolean and weak keys no longer accepted.
+- **P03 governance deferred, not CLOSED** by explicit owner instruction. GitHub main/tag restrictions are still absent/not verified (`main protected:false`, rulesets `[]` at prior audit); P04 minimum runtimes, independent Python CVEs, app E2E and long-run performance were not tested, and do not become PASS upon release.
+- The existing validated tag-push-only workflow performs npm and PyPI publishing from a new tagged main HEAD; separate jobs can partially succeed. Confirm each registry independently and avoid tag/registry overwrite. No `NPM_TOKEN` or `PYPI_API_TOKEN` secret values exposed.
+- Release status and actual CI run IDs must be recorded **after** execution, not assumed from documentation.

@@ -4,8 +4,8 @@
 
 | Module | Install | Import | Status |
 | --- | --- | --- | --- |
-| [JavaScript](./javascript/README.md) | `npm install kron-otp` | `require('kron-otp')` | Implemented and tested |
-| [Python](./python/README.md) | `pip install kron-otp` | `from kron_otp import KronOTP` | Implemented and tested |
+| [JavaScript](./javascript/README.md) | `npm install kron-otp@2.0.0` | `require('kron-otp')` | Implemented and tested |
+| [Python](./python/README.md) | `pip install kron-otp==2.0.0` | `from kron_otp import KronOTP` | Implemented and tested |
 
 Both implementations generate six-digit SHA-1 TOTP codes with 30-second periods. Verification accepts a ±one-step clock tolerance. Use at least a 160-bit secret for cross-language interoperability; keep real shared secrets out of source control.
 
@@ -39,7 +39,7 @@ KronOTP/
 ├── .github/workflows/
 │   ├── ci.yml              # Change-filtered tests
 │   ├── release.yml         # Validation on main, tag-triggered publishing
-│   └── registry-smoke.yml  # Published v1.0.0 download/install tests
+│   └── registry-smoke.yml  # Exact-version npm/PyPI download/install checks
 ├── javascript/
 │   ├── package.json
 │   ├── package-lock.json
@@ -52,7 +52,8 @@ KronOTP/
 │   ├── LICENSE
 │   ├── README.md
 │   ├── src/kron_otp.py
-│   └── tests/test_kron_otp.py
+│   ├── tests/test_kron_otp.py
+│   └── tests/totp_vectors.json  # Shared RFC and synthetic tests
 ├── docs/                    # Public user documentation and MINIFEST
 ├── project/                 # Developer technical maps, history, MINIFEST
 ├── AGENTS.md                # Pre-change documentation and privacy rules
@@ -81,3 +82,9 @@ See [Automation & Publishing](./docs/AUTOMATION_AND_PUBLISHING.md) for setup, re
 Only use TOTP with accounts and environments you are authorized to access; protect provisioning secrets, ensure synchronized time, and apply replay prevention and throttling in the server-side authentication flow.
 
 KronOTP is distributed under the [MIT License](./LICENSE).
+
+## v2.0.0 compatibility and expedited release note
+
+v2.0.0 includes the P01/P02 changes on `main`: both engines reject Base32 secrets shorter than **14 decoded bytes**, enforce raw/cleaned input limits (4096/1024 chars), and accept only ASCII whitespace normalization. **JavaScript `verify` returns `false` instead of throwing `TypeError` for expected malformed secrets**; adapt code that caught that exception. Python fixes Unix-epoch 0–29-second valid-code verification. Existing algorithm (SHA-1/6 digits/30 seconds, ±one step) and public class/method names are unchanged.
+
+**Expedited release exception (2026-11-16):** The maintainer directed this release before GitHub main/tag governance hardening and P04 production-acceptance work are complete. Branch/tag protection and cross-platform/long-running performance/security acceptance remain open. The passing focused CI/registry checks are not a security certification. Published v1.0.0 remains immutable; registry delivery of v2.0.0 is confirmed separately by release jobs.

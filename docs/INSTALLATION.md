@@ -1,13 +1,13 @@
-# Installation & Environment Setup — KronOTP v1.0.0
+# Installation & Environment Setup — KronOTP v2.0.0
 
-These instructions distinguish the **published 1.0.0 packages** from current development `main`. The library generates/verifies codes only for a shared Base32 secret **already owned/provisioned by the consumer**. P01 input-hardening fixes have **not** been published to npm or PyPI yet.
+This guide documents the **v2.0.0 release**. The library generates/verifies codes only for a shared Base32 secret **already owned/provisioned by the consumer**. Older v1.0.0 packages retain their historical validation/error behavior; do not mix them with v2.0.0 assumptions.
 
 ## Requirements
 
 | Runtime | Requirements | Published package |
 | --- | --- | --- |
-| Node.js | Node >=20.19.0 and npm, internet for installation | [kron-otp 1.0.0 (npm)](https://www.npmjs.com/package/kron-otp/v/1.0.0) |
-| Python | Python >=3.10 and pip, internet for installation | [kron-otp 1.0.0 (PyPI)](https://pypi.org/project/kron-otp/1.0.0/) |
+| Node.js | Node >=20.19.0 and npm, internet for installation | [kron-otp 2.0.0 (npm)](https://www.npmjs.com/package/kron-otp/v/2.0.0) |
+| Python | Python >=3.10 and pip, internet for installation | [kron-otp 2.0.0 (PyPI)](https://pypi.org/project/kron-otp/2.0.0/) |
 
 Source repository: https://github.com/vibtoolshq/KronOTP. npm uses `otpauth`; Python uses `pyotp>=2.12,<3`. **Use 160-bit or longer canonical Base32 secrets for reliable cross-language operation** (Python dependency requires at least 112 decoded bits). Do not use the known sample key as an actual account credential.
 
@@ -16,7 +16,7 @@ Source repository: https://github.com/vibtoolshq/KronOTP. npm uses `otpauth`; Py
 From the application's own directory:
 
 ```sh
-npm install kron-otp@1.0.0
+npm install kron-otp@2.0.0
 ```
 
 CommonJS usage:
@@ -41,7 +41,7 @@ Windows PowerShell:
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install kron-otp==1.0.0
+python -m pip install kron-otp==2.0.0
 ```
 
 macOS / Linux shell:
@@ -49,7 +49,7 @@ macOS / Linux shell:
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install kron-otp==1.0.0
+python -m pip install kron-otp==2.0.0
 ```
 
 Python use:
@@ -93,7 +93,7 @@ Node local source import: `require('./src/kron-otp')` when working in the `javas
 
 - KronOTP does **not** register accounts or retrieve your TOTP secret; provisioning is external.
 - Generator and verifier use SHA-1, six digits, 30-second periods, and a ±one-step verification window.
-- **Development `main` after P01:** accepts only canonical ASCII Base32 with 14+ decoded bytes, <=4096 raw/<=1024 whitespace-compacted characters, and only ASCII space/tab/CR/LF/FF/VT removed. `generate` rejects expected invalid keys; `verify` returns false/False for expected malformed input. Historical published `1.0.0` has different JS invalid-secret handling and short-key acceptance.
+- **Version 2.0.0 (P01 changes):** accepts only canonical ASCII Base32 with 14+ decoded bytes, <=4096 raw/<=1024 whitespace-compacted characters, and only ASCII space/tab/CR/LF/FF/VT removed. `generate` rejects expected invalid keys; `verify` returns false/False for expected malformed input. Historical `1.0.0` has different JS invalid-secret handling and short-key acceptance. **v2.0.0 is a breaking upgrade; migrate existing consumers carefully.**
 - For newly provisioned accounts use cryptographically random 160-bit or longer secrets. A minimum length check does not prove key entropy.
 - Time synchronization matters; an out-of-sync clock leads to invalid codes.
 - Never print the shared secret or put it into code, test artifacts or GitHub Actions logs.

@@ -5,7 +5,7 @@ A small CommonJS TOTP engine for Node.js, maintained in the [KronOTP monorepo](h
 ## Install
 
 ```sh
-npm install kron-otp
+npm install kron-otp@2.0.0
 ```
 
 ## Usage
@@ -22,8 +22,8 @@ console.log('Verification:', valid);
 ```
 
 - `generate(secret)` returns a six-digit string, or throws `TypeError` for a malformed Base32 secret.
-- On development `main` after P01, `verify(secret, token)` returns `true`/`false`, including `false` for an invalid secret. Previously published `1.0.0` throws `TypeError` for invalid secrets (a breaking migration consideration).
-- Configuration remains SHA-1, 6 digits and 30 seconds. P01 `main`: canonical ASCII Base32, >=14 decoded bytes (112 bits), <=4096 raw chars and <=1024 cleaned chars, only ASCII space/tab/CR/LF/FF/VT removed; `generate` rejects invalid keys with sanitized `TypeError`. Recommend cryptographically random >=20-byte secrets for provisioning.
+- **v2.0.0 breaking change:** `verify(secret, token)` returns `true`/`false`, including `false` for expected invalid secrets. Previous v1.0.0 threw `TypeError` on invalid secrets. Update any consumer error-handling logic before upgrading.
+- Configuration remains SHA-1, 6 digits and 30 seconds. **v2.0.0:** canonical ASCII Base32, >=14 decoded bytes (112 bits), <=4096 raw chars and <=1024 cleaned chars, only ASCII space/tab/CR/LF/FF/VT removed; `generate` rejects invalid keys with sanitized `TypeError`. Recommend cryptographically random >=20-byte secrets for provisioning.
 - Supported Node.js: 20.19+ (dependency requirement).
 
 ## Local tests
@@ -39,4 +39,4 @@ See the [integration and publishing guide](../docs/AUTOMATION_AND_PUBLISHING.md)
 
 Licensed under the [MIT License](./LICENSE).
 
-**Release distinction:** Source-tree P01 input fixes are not yet published. `npm install kron-otp@1.0.0` still uses its original validation and error contract until a separately authorized release.
+**Migration from v1.0.0:** Short legacy keys with fewer than 14 decoded bytes now fail validation; re-provision weak credentials securely. The legacy v1.0.0 version is not overwritten. v2.0.0 includes the P01 input/contract updates. This library has no built-in rate limits or replay protection.

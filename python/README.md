@@ -5,7 +5,7 @@ A small Python TOTP engine backed by PyOTP, maintained in the [KronOTP monorepo]
 ## Install
 
 ```sh
-python -m pip install kron-otp
+python -m pip install kron-otp==2.0.0
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ print("Verification:", verified)
 - `generate(secret: str) -> str` returns a six-digit string or raises `ValueError` for invalid secrets.
 - `verify(secret: str, token: str) -> bool` returns `False` for invalid secrets or tokens.
 - Configuration: SHA-1, 6 digits, 30-second period, ±one 30-second verification window.
-- P01 development source explicitly requires >=14 decoded bytes (112 bits), <=4096 raw/<=1024 cleaned Base32 chars and ASCII space/tab/CR/LF/FF/VT normalization; Unicode-only whitespace is rejected. Use a cryptographically random 160-bit or longer Base32 secret for provisioning.
+- **v2.0.0** explicitly requires >=14 decoded bytes (112 bits), <=4096 raw/<=1024 cleaned Base32 chars and ASCII space/tab/CR/LF/FF/VT normalization; Unicode-only whitespace is rejected. Use a cryptographically random 160-bit or longer Base32 secret for provisioning.
 - Supported Python: 3.10+.
 
 ## Local tests
@@ -41,4 +41,4 @@ See the [integration and publishing guide](../docs/AUTOMATION_AND_PUBLISHING.md)
 
 Licensed under the [MIT License](./LICENSE).
 
-**Release distinction:** Source-tree P01 strict normalization/bounds are not yet published in the PyPI `1.0.0` package. No version or dependency metadata was changed in P01.
+**v2.0.0 changes:** stricter ASCII-only whitespace and size validation, plus a fix for verifying valid OTPs at Unix seconds 0–29. Older 1.0.0 is not overwritten. This library remains stateless; implement replay prevention and attempt throttling at the relying-party server.

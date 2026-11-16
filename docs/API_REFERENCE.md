@@ -1,6 +1,6 @@
-# KronOTP API Reference — Development `main` (P01 + P02)
+# KronOTP API Reference — v2.0.0 (P01 + P02)
 
-**Version boundary:** This page describes source on `main` after Phases P01–P02. The previously published npm/PyPI `1.0.0` artifacts are unchanged, and their earlier invalid-secret behavior can differ. Do not assume `npm install kron-otp@1.0.0` contains P01 fixes.
+**Version boundary:** This page documents **v2.0.0**, incorporating P01 and P02. Historical npm/PyPI `1.0.0` artifacts remain unchanged, and their invalid-secret handling differs. Upgrading from 1.0.0 to 2.0.0 can require consumer code changes.
 
 This lists **all existing public API methods** of the current `KronOTP` class in each language. There are no instance settings, public constructor, asynchronous requests, stored accounts or extra features.
 
@@ -18,7 +18,7 @@ This lists **all existing public API methods** of the current `KronOTP` class in
 
 ## JavaScript (Node.js, CommonJS)
 
-Published `1.0.0`: `npm install kron-otp@1.0.0` (**does not include P01**). Current development source: `javascript/src/kron-otp.js`.
+For **v2.0.0**: `npm install kron-otp@2.0.0`. Source: `javascript/src/kron-otp.js`.
 
 ```js
 const KronOTP = require('kron-otp');
@@ -37,7 +37,7 @@ const accepted = KronOTP.verify(secret, token); // boolean
 - Returns: exactly 6 digits as a string, derived from current system time.
 - Throws: sanitized `TypeError` if secret is missing/wrong type, noncanonical, <14 decoded bytes, >4096 raw characters or >1024 cleaned Base32 characters.
 - Validation is performed by private `#createTOTP`, then `OTPAuth.Secret.fromBase32`.
-- **P01 `main` behavior:** JavaScript now enforces the same 14-decoded-byte minimum as Python. A cryptographically random >=20-byte secret is recommended for new provisioning; length alone is not entropy.
+- **v2.0.0 behavior:** JavaScript now enforces the same 14-decoded-byte minimum as Python. A cryptographically random >=20-byte secret is recommended for new provisioning; length alone is not entropy.
 
 ### `KronOTP.verify(secret, token)`
 
@@ -48,7 +48,7 @@ const accepted = KronOTP.verify(secret, token); // boolean
 
 ## Python
 
-Published `1.0.0`: `python -m pip install kron-otp==1.0.0` (**does not include P01**). Current development source: `python/src/kron_otp.py`.
+For **v2.0.0**: `python -m pip install kron-otp==2.0.0`. Source: `python/src/kron_otp.py`.
 
 ```python
 from kron_otp import KronOTP
@@ -69,21 +69,21 @@ accepted: bool = KronOTP.verify(secret, token)
 
 - Returns `True` for a matching six-digit token in the existing current/adjacent 30-second time steps. At Unix epoch seconds 0–29, explicitly checks valid counters 0 and +1 without evaluating negative counter −1; otherwise uses PyOTP `valid_window=1`.
 - Returns `False` for mismatched token, wrong token format, invalid or too-short secret.
-- It checks token format first, then builds the generator. It returns `False` for expected invalid-secret input, as now does JavaScript on `main`.
+- It checks token format first, then builds the generator. It returns `False` for expected invalid-secret input, as now does JavaScript in v2.0.0.
 
 ## Public API differences and design limitations
 
 | Input scenario | JavaScript `KronOTP` | Python `KronOTP` |
 | --- | --- | --- |
 | Good canonical >=160-bit Base32 | Generate/verify | Generate/verify |
-| 80-bit Base32 example | Rejected on `main` | Rejected on `main` |
+| 80-bit Base32 example | Rejected in v2.0.0 | Rejected in v2.0.0 |
 | Invalid secret at generate | Throws `TypeError` | Raises `ValueError` |
-| Invalid secret at verify | Returns `false` on `main` | Returns `False` on `main` |
+| Invalid secret at verify | Returns `false` in v2.0.0 | Returns `False` in v2.0.0 |
 | Invalid token (valid secret) | `false` | `False` |
 | Custom digits, algorithm, time-step | Not exposed | Not exposed |
 | Single-use OTP tracking | Not implemented | Not implemented |
 
-**P01 migration:** Choose randomly generated >=160-bit keys for newly provisioned accounts, although the implementation minimum remains 112 bits for compatibility with existing Python keys. Consumers who depended on short JS keys, JS verify exceptions or broad Unicode whitespace acceptance must adapt before a future release. Python epoch-start verification was addressed in development `main` by P02; published PyPI `1.0.0` remains unchanged.
+**P01 migration:** Choose randomly generated >=160-bit keys for newly provisioned accounts, although the implementation minimum remains 112 bits for compatibility with existing Python keys. Consumers who depended on short JS keys, JS verify exceptions or broad Unicode whitespace acceptance must adapt before a future release. Python epoch-start verification was fixed for v2.0.0 by P02; historical PyPI `1.0.0` remains unchanged.
 
 ## Integration responsibility
 
