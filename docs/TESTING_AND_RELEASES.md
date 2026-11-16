@@ -74,3 +74,9 @@ More integration and manual publishing detail: [Automation and Publishing](./AUT
 ## P02 shared vectors and source test prerequisites
 
 The Node source-test file reads the shared fixture at `../python/tests/totp_vectors.json` relative to the `javascript/` directory (resolved from `javascript/tests/test.js`); it requires the **full KronOTP monorepo checkout**, not an isolated npm tarball. Python source tests read that same JSON next to `python/tests/test_kron_otp.py`. Runtime imports and published package contents do not depend on the test fixture. The P02 fix and regression tests reside on `main`; npm/PyPI published `1.0.0` remains unchanged until an authorized future tag release.
+
+## Source-only P02 verification status (2026-11-16)
+
+- [GitHub Actions CI run 43851819951](https://github.com/vibtoolshq/KronOTP/actions/runs/43851819951) completed successfully for both JavaScript and Python tests (plus change detection).
+- Python source suite: **9/9 test methods PASS**, including Unix epoch counter 0 and current/next drift validation. Node source suite PASS. Both assert six fixed RFC and 80 independently generated synthetic reference cases.
+- This is **development source on `main`**. Published npm and PyPI version `1.0.0` is unchanged; no new tag, registry upload or public artifact-install verification was performed in P02.

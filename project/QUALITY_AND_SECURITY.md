@@ -50,3 +50,10 @@ Mark each claim as observed from source, CI log, or direct test. Use PASS/FAIL/S
 - Shared fixture is public synthetic data; the reference script independently calculates HMAC-SHA1 TOTP and cross-checks all six known RFC outputs before exporting 80 expected values. Fixture is for source CI tests, not for package runtime or users' secrets.
 - The Python time-boundary fix samples time once per call, checks current/next counters 0/+1 explicitly with `valid_window=0` if `0 <= now < 30`, and otherwise retains `valid_window=1` unchanged. Negative timestamps remain failures.
 - These checks do not imply all algorithms, concurrency, long-duration memory stability or server replay defense are covered; P03/P04 remain pending.
+
+## P02 focused verification results (2026-11-16)
+
+- [Source CI 43851819951](https://github.com/vibtoolshq/KronOTP/actions/runs/43851819951): change detection, Node and Python jobs all SUCCESS.
+- Local Node source tests PASS (six RFC values, 80 independent expected synthetic key/time/code values, edge/window cases), local Python `unittest` **9/9 PASS** including the former Unix-epoch false-rejection case.
+- Python current/next counter checks at timecode zero preserve ±one step for normal timecodes; no negative counter is generated. JS runtime and both package metadata remain unchanged.
+- This confirms the **configured P02 regression suite**, not comprehensive security certification, concurrency/performance assurance or newly published npm/PyPI artifacts. P03/P04 hardening remains open.
