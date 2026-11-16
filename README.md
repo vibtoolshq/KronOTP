@@ -1,58 +1,81 @@
-# ⏳ KronOTP
+# KronOTP
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node.js](https://img.shields.io/badge/Node.js-Ready-success)
-![Python](https://img.shields.io/badge/Python-Ready-success)
+**KronOTP** is a multi-language toolkit for time-based one-time passwords (TOTP), designed for authorized two-factor authentication (2FA) integrations and automated testing.
 
-**KronOTP** is a universal, multi-language TOTP (Time-based One-Time Password) engine. Built with a monorepo architecture, it provides native, production-ready modules for generating and verifying 2FA codes across different programming languages.
+> **Project status: Foundation / in development.** The JavaScript and Python package layouts and dependency configuration are in place, but code generation, verification, and tests have **not** been implemented yet. Do not use this repository as a working authenticator until those phases are completed and verified.
 
-Whether you are bypassing 2FA in automated testing (Playwright, Puppeteer, Selenium) or building a custom authenticator backend, KronOTP offers a unified, zero-conflict, and highly optimized toolkit.
+## Language modules
 
-## 🚀 Available Modules
+| Language | Directory | Package name | Planned engine dependency | Status |
+| --- | --- | --- | --- | --- |
+| Node.js / JavaScript | [`javascript/`](./javascript/) | `kron-otp` (npm) | [`otpauth`](https://www.npmjs.com/package/otpauth) | Scaffolded; implementation pending |
+| Python | [`python/`](./python/) | `kron-otp` (PyPI) | [`pyotp`](https://pypi.org/project/PyOTP/) | Scaffolded; implementation pending |
 
-Each language has its own isolated environment and package manager configuration. Click on the language to view its specific documentation:
+Each module has its own package metadata, source directory, and test directory. Implementations will be developed and tested independently while targeting consistent TOTP behavior.
 
-* 🟢 **[Node.js / JavaScript](./javascript)** — Publishable to `npm`
-* 🔵 **[Python](./python)** — Publishable to `PyPI`
-* 🟡 **[Go](./go)** — *Coming Soon*
-* 🟣 **[PHP](./php)** — *Coming Soon*
-
-## 💡 Why KronOTP?
-
-- **Automation First:** Perfectly designed for headless browsers and CI/CD testing pipelines.
-- **Cross-Platform Consistency:** Get the exact same functionality and structure regardless of the language you code in.
-- **RFC 6238 Compliant:** Strictly follows standard TOTP algorithm guidelines.
-- **Zero Conflicts:** Isolated sub-directories ensure `npm`, `pip`, and other package managers never interfere with each other.
-
-## 📁 Monorepo Structure
+## Repository structure
 
 ```text
 KronOTP/
-├── javascript/        # npm package (totp generator for JS environments)
-├── python/            # PyPI package (totp generator for Python environments)
-├── go/                # Future Go implementation
-├── README.md          # You are here
-└── LICENSE            # MIT License
+├── .gitignore
+├── LICENSE                 # Placeholder; license text pending
+├── README.md               # Monorepo overview
+├── AI_INSTRUCTIONS.md      # Development scope and safety rules
+├── javascript/
+│   ├── package.json
+│   ├── README.md
+│   ├── src/
+│   │   └── kron-otp.js
+│   └── tests/
+│       └── test.js
+└── python/
+    ├── pyproject.toml
+    ├── README.md
+    ├── src/
+    │   ├── __init__.py
+    │   └── kron_otp.py
+    └── tests/
+        ├── __init__.py
+        └── test_kron_otp.py
 ```
 
-## ⚡ Quick Preview
+## Development roadmap
 
-**Using Node.js:**
-```javascript
-const KronOTP = require('./javascript/src/kron-otp');
-const code = KronOTP.generate('JBSWY3DPEHPK3PXP');
-console.log('2FA Code:', code);
+1. **Foundation:** Create the monorepo structure and package configuration.
+2. **Core implementation:** Implement TOTP generation and verification in each language using the configured dependency.
+3. **Validation:** Add RFC 6238 test vectors, boundary and invalid-input tests, and cross-language consistency checks.
+4. **Release readiness:** Finish module documentation, licensing, CI checks, and package publishing requirements.
+
+These are planned milestones, **not** claims of completed features or standards compliance.
+
+## Local setup
+
+Use a separate package manager in each module:
+
+**Node.js**
+
+```powershell
+cd javascript
+npm install
 ```
 
-**Using Python:**
-```python
-from python.src.kron_otp import KronOTP
-code = KronOTP.generate('JBSWY3DPEHPK3PXP')
-print(f"2FA Code: {code}")
+**Python (3.10+)**
+
+```powershell
+cd python
+python -m pip install -e .
 ```
 
-## 🤝 Contributing
-Contributions are always welcome! Feel free to open an issue or submit a pull request if you want to add support for a new language.
+These commands configure dependencies only. The source modules and tests remain placeholders in this phase. The JavaScript test command intentionally reports that tests are not implemented, rather than incorrectly reporting a passing suite.
 
-## 📝 License
-This project is licensed under the [MIT License](LICENSE).
+## Security
+
+TOTP relies on a shared secret and synchronized time. Only generate codes for accounts and test environments you own or are authorized to access. Never commit, log, or expose real TOTP secrets.
+
+## Contributing
+
+Review [`AI_INSTRUCTIONS.md`](./AI_INSTRUCTIONS.md) before making changes. Keep work scoped to the requested phase, preserve module boundaries, and add focused verification when implementing behavior.
+
+## License
+
+The root [`LICENSE`](./LICENSE) file is currently empty. Licensing terms must be added before distributing or publishing KronOTP.

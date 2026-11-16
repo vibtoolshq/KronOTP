@@ -1,0 +1,46 @@
+# Node.js
+node_modules/
+.npm/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage*
+htmlcov/
+
+# Build, distribution, and reports
+dist/
+build/
+coverage/
+.nyc_output/
+*.whl
+*.log
+
+# Local environment and private credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini

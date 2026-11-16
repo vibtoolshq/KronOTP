@@ -1,0 +1,14 @@
+{
+  "name": "kron-otp",
+  "version": "1.0.0",
+  "description": "Node.js TOTP engine for the KronOTP monorepo (implementation pending).",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/kron-otp.js",
+  "scripts": {
+    "test": "node -e \"console.error('Tests are not implemented yet.'); process.exit(1)\""
+  },
+  "dependencies": {
+    "otpauth": "^9.6.0"
+  }
+}
