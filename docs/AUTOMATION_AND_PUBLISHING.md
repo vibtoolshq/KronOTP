@@ -205,11 +205,13 @@ After checking permissions, licensing, registry names, and the validation run, m
 ~~~powershell
 git switch main
 git pull --ff-only origin main
-git tag -a v1.0.0 -m "KronOTP v1.0.0"
-git push origin v1.0.0
+# Replace the placeholder with a NEW, approved version after bumping both manifests.
+$Version = "NEW_APPROVED_SEMVER"
+git tag -a "v$Version" -m "KronOTP v$Version"
+git push origin "v$Version"
 ~~~
 
-**Do not push this example tag until secrets are rotated and reviewed.** Both registries need publishing authority for `kron-otp`; a package name that is unavailable or owned by someone else will reject the upload. Each new release must bump **both** manifest versions and use a new matching tag (e.g. `v1.0.1`). Two separate registries are not atomic: one may publish even if the other rejects the upload. Inspect the release run before retrying; do not reuse an already published version.
+**Do not push a new tag until the planned release version, required publishing credentials and GitHub branch/tag protections are approved and verified. Published v1.0.0 must not be reused.** Both registries need publishing authority for `kron-otp`; a package name that is unavailable or owned by someone else will reject the upload. Each new release must bump **both** manifest versions and use a new matching tag (e.g. `v1.0.1`). Two separate registries are not atomic: one may publish even if the other rejects the upload. Inspect the release run before retrying; do not reuse an already published version.
 
 ### 2.3 Publish `javascript/` to npm manually
 
@@ -280,3 +282,11 @@ Packaging and PyPI documentation:
 ### 2.5 Release verification and support
 
 After a successful automated or manual release, install each package in a fresh environment and run a generation/verification smoke test using an authorized **nonproduction** secret. Ensure both runtimes agree on SHA-1, six digits, a 30-second period, and accepted secrets. Confirm that each package's registry page, module README, license, and version are correct. The separate release workflow publishes from version tags only; regular CI never receives publishing secrets.
+
+### P03 release-workflow hardening (development `main`)
+
+Publishing now requires an actual **push of a valid `vX.Y.Z` tag** at the **current main HEAD**. Manually running Actions against a tag does *not* publish. Workflow third-party Actions use commit-pinned versions; npm publishing via `NPM_TOKEN` no longer requests unneeded OIDC id-token write permission.
+
+The published-package smoke workflow accepts a **manual stable version** (such as `1.0.0`) and downloads/checks exactly that version from both registries; a workflow-file push defaults to matching manifest versions. This is verification, **not a new publication**.
+
+**External blocker:** P03 cannot assert GitHub branch/tag protection; main is currently unprotected, rulesets empty and the connected integration lacks access to protection settings. An authorized GitHub repo administrator must enable and verify effective main and `v*` tag safeguards before the release-security phase can be called complete. No engine logic or public package version was changed.

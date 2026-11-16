@@ -67,3 +67,12 @@ Commit SHA | GitHub/Local baseline | Release tag (if any) | Gaps | CLOSED / BLOC
 - **GitHub Actions:** [KronOTP CI run 43851819951](https://github.com/vibtoolshq/KronOTP/actions/runs/43851819951) — detect changes, JavaScript tests and Python tests all SUCCESS.
 - **Patch audit:** `git diff --check` PASS; 11 changed paths are only Python `verify`, source tests/shared fixture and affected project/docs; JS runtime blob unchanged; module versions, dependencies, CI/release workflows and npm/PyPI artifacts unchanged. No release workflow run was triggered for this phase; no tag or publication.
 - **Result:** KO-002 and KO-005 resolved **on development main**. P02 CLOSED after source CI and Git sync; P03 pending separate approval. GitHub/local final HEAD is recorded in the local private phase note.
+
+## 2026-11-16 — Production Hardening P03: CI & release workflow configuration
+
+- **Incoming baseline:** `7f0a0cc34f7c6dabd4f43cde12963dc7c07083fe`; P01/P02 were closed.
+- **Scope Lock:** KO-006 dependency consistency, KO-010 version-aware published smoke, KO-007 workflow security and actual GitHub main/tag protection, with exact listed three YAML files and relevant technical/public Markdown only.
+- **Implemented in source:** Node `npm ci` instead of `npm install`; Python `pip install -e .` from `pyproject.toml`; verified SHA-pinned official/paths-filter Actions; tag **push only** publishers and current-main-HEAD tag requirement; unnecessarily broad npm id-token permission removed; smoke resolver validates requested SemVer, manifests fallback and exact installed artifact version in both registries.
+- **Unchanged:** JS/Python engines/tests, package names, versions, dependencies, lockfile, README and `v1.0.0` public registries. No tag creation or publishing.
+- **Governance blocked:** GitHub main `protected:false`, rulesets `[]`, protection API 403, no administrative ruleset writer in connected integration. Code changes cannot implement or confirm branch/tag restrictions; KO-007 remains OPEN. No owner risk acceptance given.
+- **Verification, commit and final phase status:** See the later dated closeout entry and local ignored P03 note for actual test jobs/commit IDs. Do not mark full P03 CLOSED unless actual branch/tag protections have been verified.

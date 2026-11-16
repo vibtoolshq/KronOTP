@@ -7,6 +7,11 @@ on:
     paths:
       - '.github/workflows/registry-smoke.yml'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Published stable version to download and test (e.g. 1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -16,15 +21,60 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  npm:
-    name: npm - download, install, and test v1.0.0
+  resolve:
+    name: Resolve and validate published version
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Validate selected SemVer
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import re
+          import tomllib
+
+          js = json.loads(pathlib.Path("javascript/package.json").read_text(encoding="utf-8"))
+          py = tomllib.loads(pathlib.Path("python/pyproject.toml").read_text(encoding="utf-8"))
+          if js["name"] != "kron-otp" or py["project"]["name"] != "kron-otp":
+              raise SystemExit("Package name must remain kron-otp in both manifests")
+          if os.environ["EVENT_NAME"] == "workflow_dispatch":
+              version = os.environ.get("REQUESTED_VERSION", "").strip()
+          else:
+              if js["version"] != py["project"]["version"]:
+                  raise SystemExit("Cannot choose default: manifest versions differ")
+              version = js["version"]
+
+          if re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version) is None:
+              raise SystemExit("Refusing invalid version: expected numeric MAJOR.MINOR.PATCH only")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as result:
+              result.write(f"version={version}\n")
+          print(f"Selected public npm/PyPI version: {version}")
+          PY
+
+  npm:
+    name: npm - download, install, verify requested version
+    needs: resolve
+    runs-on: ubuntu-latest
+    env:
+      SMOKE_VERSION: ${{ needs.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '24'
           package-manager-cache: false
@@ -34,13 +84,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/npm-download"
-          npm pack kron-otp@1.0.0 \
+          npm pack "kron-otp@$SMOKE_VERSION" \
             --pack-destination "$RUNNER_TEMP/npm-download" \
             --registry=https://registry.npmjs.org \
             --ignore-scripts \
             --cache "$RUNNER_TEMP/npm-cache"
-          test -s "$RUNNER_TEMP/npm-download/kron-otp-1.0.0.tgz"
-          tar -tzf "$RUNNER_TEMP/npm-download/kron-otp-1.0.0.tgz" |
+          test -s "$RUNNER_TEMP/npm-download/kron-otp-$SMOKE_VERSION.tgz"
+          tar -tzf "$RUNNER_TEMP/npm-download/kron-otp-$SMOKE_VERSION.tgz" |
             grep -Fx 'package/src/kron-otp.js'
 
       - name: Install downloaded npm release in clean consumer environment
@@ -48,7 +98,7 @@ jobs:
         run: |
           set -euo pipefail
           npm install --prefix "$RUNNER_TEMP/npm-consumer" \
-            "$RUNNER_TEMP/npm-download/kron-otp-1.0.0.tgz" \
+            "$RUNNER_TEMP/npm-download/kron-otp-$SMOKE_VERSION.tgz" \
             --registry=https://registry.npmjs.org \
             --cache "$RUNNER_TEMP/npm-cache" \
             --no-save --ignore-scripts --no-audit --no-fund
@@ -63,7 +113,7 @@ jobs:
           const KronOTP = require(packageDir);
           const manifest = require(path.join(packageDir, 'package.json'));
           assert.equal(manifest.name, 'kron-otp');
-          assert.equal(manifest.version, '1.0.0');
+          assert.equal(manifest.version, process.env.SMOKE_VERSION);
 
           // 160-bit public RFC example key; never a live account secret.
           const secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
@@ -74,7 +124,7 @@ jobs:
           assert.equal(KronOTP.verify(secret, 'invalid'), false);
           assert.equal(KronOTP.verify(secret, '12345'), false);
           assert.throws(() => KronOTP.generate('not-base32!'), TypeError);
-          console.log('Published npm kron-otp@1.0.0: smoke tests PASS');
+          console.log('Published npm kron-otp@' + process.env.SMOKE_VERSION + ': smoke tests PASS');
           JS
 
       - name: Run original JavaScript source tests
@@ -84,14 +134,17 @@ jobs:
           node javascript/tests/test.js
 
   pypi:
-    name: PyPI - download, install, and test v1.0.0
+    name: PyPI - download, install, verify requested version
+    needs: resolve
     runs-on: ubuntu-latest
+    env:
+      SMOKE_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.12'
 
@@ -100,11 +153,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/pypi-download"
-          python -m pip download kron-otp==1.0.0 \
+          python -m pip download "kron-otp==$SMOKE_VERSION" \
             --index-url https://pypi.org/simple/ \
             --no-cache-dir --no-deps --only-binary=:all: \
             --dest "$RUNNER_TEMP/pypi-download"
-          test -s "$RUNNER_TEMP/pypi-download/kron_otp-1.0.0-py3-none-any.whl"
+          test -s "$RUNNER_TEMP/pypi-download/kron_otp-$SMOKE_VERSION-py3-none-any.whl"
 
       - name: Install downloaded wheel in isolated Python environment
         shell: bash
@@ -114,17 +167,18 @@ jobs:
           "$RUNNER_TEMP/pypi-consumer/bin/python" -m pip install \
             --index-url https://pypi.org/simple/ \
             --no-cache-dir \
-            "$RUNNER_TEMP/pypi-download/kron_otp-1.0.0-py3-none-any.whl"
+            "$RUNNER_TEMP/pypi-download/kron_otp-$SMOKE_VERSION-py3-none-any.whl"
 
       - name: Test installed PyPI release
         shell: bash
         run: |
           "$RUNNER_TEMP/pypi-consumer/bin/python" <<'PY'
           import importlib.metadata
+          import os
           import re
           from kron_otp import KronOTP
 
-          assert importlib.metadata.version("kron-otp") == "1.0.0"
+          assert importlib.metadata.version("kron-otp") == os.environ["SMOKE_VERSION"]
           secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
           token = KronOTP.generate(secret)
           assert re.fullmatch(r"[0-9]{6}", token)
@@ -139,7 +193,7 @@ jobs:
               pass
           else:
               raise AssertionError("Short Base32 secret should be rejected")
-          print("Published PyPI kron-otp==1.0.0: smoke tests PASS")
+          print("Published PyPI kron-otp==" + os.environ["SMOKE_VERSION"] + ": smoke tests PASS")
           PY
 
       - name: Run original Python source tests

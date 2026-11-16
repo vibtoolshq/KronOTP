@@ -20,8 +20,8 @@ Audit basis: `javascript/tests/test.js`, `python/tests/test_kron_otp.py`, three 
 | KO-008: unbounded input | **P01 fixed on development `main`**: raw <=4096, compact <=1024 characters | Downstream authentication server must still rate-limit requests |
 | KO-005: deterministic RFC/vector automation | P02 includes 6 fixed-time RFC SHA-1 6-digit known outputs and 80 independent synthetic reference cases in both source test suites | Verify passing JS/Python CI jobs; supported SHA-1/6/30 only |
 | KO-002: boundary verification | P02 guards negative PyOTP drift offset during epoch time 0–29; tests cover 0,1,29,30,59,60,61, leading zero, ±1 and two-step rejection | Verify Python and JS CI, no broader verifier policy |
-| CI version drift | `ci.yml` Python pip constraint is wider than `pyproject.toml`; Node job uses `npm install` vs lockfile | Align versions and use reproducible install |
-| Published smoke version | `registry-smoke.yml` tests only 1.0.0 | Version-aware target for later tags |
+| KO-006 CI version drift | P03 uses `npm ci` with committed lockfile and Python editable install from `pyproject.toml` | Validate full CI Node and Python jobs; Python dependencies still range-based |
+| KO-010 Published smoke version | P03 selects explicit requested stable version or matching manifest defaults; downloaded/installed artifact must equal requested version | Validate current public `1.0.0` and wrong-version failure |
 | Stateful replay/abuse defense | APIs are stateless and tolerate one adjacent time step | Enforce single-use timecodes, rate limiting and account lockout on relying-party server |
 
 ## P01 additional guardrails
@@ -57,3 +57,9 @@ Mark each claim as observed from source, CI log, or direct test. Use PASS/FAIL/S
 - Local Node source tests PASS (six RFC values, 80 independent expected synthetic key/time/code values, edge/window cases), local Python `unittest` **9/9 PASS** including the former Unix-epoch false-rejection case.
 - Python current/next counter checks at timecode zero preserve ±one step for normal timecodes; no negative counter is generated. JS runtime and both package metadata remain unchanged.
 - This confirms the **configured P02 regression suite**, not comprehensive security certification, concurrency/performance assurance or newly published npm/PyPI artifacts. P03/P04 hardening remains open.
+
+## P03 workflow source hardening vs external repository protection
+
+- CI uses lockfile-safe Node install and Python dependencies defined by distribution metadata; Actions pinned to specific Git commits; release publication constrained to pushed version tags rather than manual tag-targeted dispatch; tag points at current main HEAD.
+- Public registry smoke accepts strict stable SemVer, resolves manifest default on workflow pushes and verifies matching installed package metadata on npm/PyPI; no archive modification or publication in smoke.
+- **KO-007 remains BLOCKED by GitHub permissions/settings:** main `protected:false`, rulesets `[]`, branch-protection read 403. Administrator action + verification mandatory; workflow edits are not equivalent to actual tag/branch protection.

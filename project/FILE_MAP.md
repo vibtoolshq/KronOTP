@@ -1,6 +1,6 @@
 # Repository File & Directory Map
 
-Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064`, updated for production hardening phases P01–P02 on development `main`. This map covers **tracked files and key directories**; `notes/` is intentionally untracked.
+Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064`, updated for production hardening phases P01–P03 on development `main`. This map covers **tracked files and key directories**; `notes/` is intentionally untracked.
 
 | Path | Responsibility and how/when used |
 | --- | --- |
@@ -23,9 +23,9 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `python/tests/__init__.py` | Empty test-directory initializer |
 | `python/tests/test_kron_otp.py` | Python `unittest` existing P01 input tests plus P02 fixed-time RFC/epoch/window/80-case shared-fixture regression checks |
 | `python/tests/totp_vectors.json` | P02 shared, **public synthetic** SHA-1 fixed-time fixture (6 RFC and 80 independently computed key/time/OTP cases); consumed by both source suites, not part of runtime exports |
-| `.github/workflows/ci.yml` | Path-filtered source tests, Node/Python jobs |
-| `.github/workflows/release.yml` | Main-branch validation and tag-triggered npm/PyPI publishing |
-| `.github/workflows/registry-smoke.yml` | Published **v1.0.0** download/install/verification in clean CI environments; manual trigger supported |
+| `.github/workflows/ci.yml` | Path-filtered source tests; P03 lockfile-safe `npm ci`, Python editable install from package metadata, SHA-pinned actions |
+| `.github/workflows/release.yml` | P03 secure tag-push-only publisher gating, current-main-head tag check, least-privileged token permissions, SHA-pinned action versions |
+| `.github/workflows/registry-smoke.yml` | P03 strict SemVer target resolver, dynamic npm/PyPI download, install and exact-version verification; manual input and manifest-derived push default |
 | `docs/AUTOMATION_AND_PUBLISHING.md` | Public Playwright/Puppeteer/Selenium integration examples and publishing steps |
 | `docs/README.md` | Public docs entry point and maintenance guidelines |
 | `docs/MINIFEST.md` | All direct docs entries |
