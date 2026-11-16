@@ -10,12 +10,14 @@ Audit basis: `javascript/tests/test.js`, `python/tests/test_kron_otp.py`, three 
 
 **Release CI** validates both packages, npm pack contents, Python wheel+sdist, wheel smoke import. Published-package smoke CI downloads and installs registry versions into isolated contexts. The published smoke workflow completed successfully in run `43836244524`.
 
-## Limitations and open hardening work (not fixed here)
+## P01 addressed findings and open hardening work
 
-| Item | Evidence | Scope for a future phase |
+| Item | Evidence | Remaining action / scope |
 | --- | --- | --- |
-| Minimum-key policy divergence | P01 enforces >=14 decoded bytes in both engines (112-bit minimum) | Use cryptographically random >=20-byte secrets for new provisioning; do not treat length as proof of entropy |
-| Error contract divergence | P01 makes `verify` return false/False for known malformed input in both; `generate` preserves native exceptions | Breaking JS v1.0.0 verify behavior; migration/release review required |
+| KO-001: weak-key acceptance | **P01 fixed on development `main`**: both wrappers require >=14 decoded bytes | Provision random >=20-byte secrets; later release migration/semver review required |
+| KO-003: invalid-secret verification | **P01 fixed on development `main`**: both `verify` methods return false/False for expected invalid input | JS `1.0.0` previously threw; documented breaking change needs release migration review |
+| KO-004: whitespace normalization | **P01 fixed on development `main`**: ASCII whitespace only, reject Unicode BOM/NBSP and pre-uppercase non-ASCII | Review legacy consumers before release |
+| KO-008: unbounded input | **P01 fixed on development `main`**: raw <=4096, compact <=1024 characters | Downstream authentication server must still rate-limit requests |
 | RFC/vector automation | Existing JS/Python test scripts generate at current time; no fixed-time RFC vectors in committed test suites | Add deterministic timestamp/vector coverage |
 | Boundary testing | No explicit rollover, leading-zero fixed-time, +/- step and replay tests in committed suites | Add focused cases with time injection/mocking |
 | CI version drift | `ci.yml` Python pip constraint is wider than `pyproject.toml`; Node job uses `npm install` vs lockfile | Align versions and use reproducible install |
@@ -28,6 +30,7 @@ Audit basis: `javascript/tests/test.js`, `python/tests/test_kron_otp.py`, three 
 - Normalize only ASCII whitespace (space, tab, CR, LF, FF, VT). Reject Unicode BOM/NBSP and non-ASCII case mapping. Reject noncanonical padding bits.
 - A 112-bit length threshold only prevents trivially short encoded keys: it does **not** guarantee unpredictability. Provision random 160-bit or longer secrets for new accounts.
 - Historical public registry `v1.0.0` binaries are not updated by development `main` changes.
+- Focused P01 CI evidence: [KronOTP CI run 43847176070](https://github.com/vibtoolshq/KronOTP/actions/runs/43847176070): Node tests PASS; Python tests 6/6 PASS. [Release validation run 43847175995](https://github.com/vibtoolshq/KronOTP/actions/runs/43847175995): validation PASS, both publish jobs SKIPPED.
 
 ## Security model
 

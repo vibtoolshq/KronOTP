@@ -1,6 +1,6 @@
 # Installation & Environment Setup — KronOTP v1.0.0
 
-These instructions describe **published packages** and supported local development usage. The library generates/verifies codes only for a shared Base32 secret **already owned/provisioned by the consumer**.
+These instructions distinguish the **published 1.0.0 packages** from current development `main`. The library generates/verifies codes only for a shared Base32 secret **already owned/provisioned by the consumer**. P01 input-hardening fixes have **not** been published to npm or PyPI yet.
 
 ## Requirements
 
@@ -93,6 +93,8 @@ Node local source import: `require('./src/kron-otp')` when working in the `javas
 
 - KronOTP does **not** register accounts or retrieve your TOTP secret; provisioning is external.
 - Generator and verifier use SHA-1, six digits, 30-second periods, and a ±one-step verification window.
+- **Development `main` after P01:** accepts only canonical ASCII Base32 with 14+ decoded bytes, <=4096 raw/<=1024 whitespace-compacted characters, and only ASCII space/tab/CR/LF/FF/VT removed. `generate` rejects expected invalid keys; `verify` returns false/False for expected malformed input. Historical published `1.0.0` has different JS invalid-secret handling and short-key acceptance.
+- For newly provisioned accounts use cryptographically random 160-bit or longer secrets. A minimum length check does not prove key entropy.
 - Time synchronization matters; an out-of-sync clock leads to invalid codes.
 - Never print the shared secret or put it into code, test artifacts or GitHub Actions logs.
 - There is no CLI command, dashboard, login page, browser extension or settings UI supplied by this repository.
