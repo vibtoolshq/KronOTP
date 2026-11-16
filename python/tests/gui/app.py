@@ -154,7 +154,7 @@ class Authenticator(tk.Tk):
         self.bind("<Control-Shift-C>", lambda _e: self.copy_otp(), add="+")
         self.protocol("WM_DELETE_WINDOW", self._close)
         self._populate()
-        self.after(200, self._tick)
+        self._timer_job = self.after(200, self._tick)
 
         if self._locked:
             self._set_status("Saved accounts hidden. Select Unlock.", warn=True)
@@ -361,7 +361,7 @@ class Authenticator(tk.Tk):
                 self._privacy_lock(auto=True)
             else:
                 self._show_current()
-        self.after(250, self._tick)
+        self._timer_job = self.after(250, self._tick)
 
     def _privacy_lock(self, _event=None, *, auto=False):
         if not self._locked:
@@ -627,6 +627,12 @@ class Authenticator(tk.Tk):
             pass
 
     def _close(self):
+        if self._timer_job is not None:
+            self.after_cancel(self._timer_job)
+            self._timer_job = None
+        if self._clipboard_job is not None:
+            self.after_cancel(self._clipboard_job)
+            self._clipboard_job = None
         self._clear_owned_clipboard()
         self._accounts.clear()
         self._session = None
