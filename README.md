@@ -54,8 +54,10 @@ KronOTP/
 │   ├── src/kron_otp.py
 │   ├── tests/test_kron_otp.py
 │   ├── tests/totp_vectors.json  # Shared RFC and synthetic tests
-│   └── tests/gui/              # Optional source-only Tkinter tester
-│       ├── app.py
+│   └── tests/gui/              # Source-only Tkinter Authenticator application
+│       ├── app.py             # Multi-account interface using the PyPI engine
+│       ├── vault.py           # Windows DPAPI current-user encrypted account store
+│       ├── test_app.py        # GUI and vault integration checks (Windows)
 │       └── README.md
 ├── docs/                    # Public user documentation and MINIFEST
 ├── project/                 # Developer technical maps, history, MINIFEST
@@ -103,3 +105,16 @@ v2.0.0 includes the P01/P02 changes on `main`: both engines reject Base32 secret
 ## Optional Python GUI demo (GUI-01)
 
 The source repository includes a small Tkinter [Live TOTP Tester](./python/tests/gui/README.md) at `python/tests/gui/app.py`. It calls the **installed published PyPI kron-otp==2.0.0 module** and lets you paste a user-owned Base32 key, view live 6-digit codes and a 30-second countdown, and copy the code. The GUI is a **source-only test/demo application**; it is not included in the npm or PyPI packages, does not store secrets and does not verify remote logins.
+
+## KronOTP Authenticator — local desktop app (GUI-02)
+
+**Source-only Python/Tkinter application**, designed for real daily use with the **published PyPI KronOTP v2.0.0 engine**. It now supports multiple saved accounts, issuer/name search, add/edit/delete, `otpauth://totp` URI paste, a temporary unsaved secret, live 30-second OTPs, copy with conditional 15-second clipboard clear, privacy lock and 5-minute inactivity lock. A separate local check calls the engine's `verify` method; it does not log in to any remote service.
+
+On Windows, explicit **Save encrypted** uses DPAPI CurrentUser to protect secrets in `%LOCALAPPDATA%\KronOTP\vault.dat`; on other OSs only unsaved sessions are available. DPAPI ties saved accounts to your Windows user/profile and does **not** provide independent master-password security. Back up account recovery codes separately. No secrets are saved in the repository. The GUI is **not** bundled with the PyPI wheel and is not separately packaged as an EXE.
+
+```powershell
+python -m pip install kron-otp==2.0.0
+python python/tests/gui/app.py
+```
+
+See [Authenticator usage, protection and recovery limitations](./python/tests/gui/README.md). **This is a production-oriented application, not independently security-certified**; original P03 branch/tag governance and P04 broader security/platform assurance remain uncompleted.

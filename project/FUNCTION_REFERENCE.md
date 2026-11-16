@@ -57,3 +57,12 @@ Neither wrapper accepts a configurable timestamp, issuer, algorithm, digits, per
 ## P02 deterministic cross-engine coverage
 
 The new source-only `python/tests/totp_vectors.json` contains six RFC 6238 SHA-1 known 6-digit outputs (including leading zeroes) and 80 synthetic 160-bit secret/time/expected-OTP cases from an independent HMAC reference calculation. `javascript/tests/test.js` and `python/tests/test_kron_otp.py` assert matching generated results and verification against the same fixture, plus epoch/rollover/two-step-outside behaviors. No new public timestamp API or runtime dependency was introduced. Package versions on npm/PyPI remain 1.0.0 and do not contain P01/P02 source changes.
+
+## GUI-02 optional application functions (not public engine API)
+
+- `python/tests/gui/app.py::load_pypi_engine()` — verifies exact published package metadata and resolved module path (no source import fallback).
+- `parse_auth_input()` — accepts a Base32 secret or SHA1/6/30 `otpauth://totp` URI, rejects unsupported modes; does not generate OTP.
+- `Authenticator.add_account`, `.edit_account`, `.delete_account` — multi-account actions, engine-validating secret before opt-in encrypted storage; `Use once` remains memory-only.
+- `Authenticator._show_current`, `.copy_otp`, `._clear_owned_clipboard`, `._tick`, `._privacy_lock` — engine-generation, current-step display, conditional copy-clear, idle timeout and privacy lock.
+- `python/tests/gui/vault.py::AccountVault.load/save` — Windows DPAPI encrypted JSON envelope and validated schema/atomic replacement, not an independent authentication or backup service.
+- **None of these methods are published KronOTP engine APIs**. The engine remains exclusively `KronOTP.generate(secret)` and `KronOTP.verify(secret, token)` with SHA1/6 digits/30 seconds.

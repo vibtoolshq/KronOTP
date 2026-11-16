@@ -9,7 +9,7 @@ This is the **Git-tracked, public** user manual for the **existing** Node.js and
 - Use either the published `kron-otp` Node.js CommonJS package or the published Python `kron_otp` module.
 - Integrate token generation in your own authorized browser automation or other applications.
 
-**Product scope:** KronOTP is a pair of libraries; it has **no installed application window, web page, settings panel, QR-code UI, API server, database, built-in account storage or browser automation service**. The repository additionally provides an **optional source-only Tkinter test window** at `python/tests/gui/app.py` to generate and copy codes using the installed PyPI engine. It is not shipped with the package and does not log in to remote accounts. Playwright/Puppeteer/Selenium guides remain consumer integration examples.
+**Product scope:** KronOTP is a pair of libraries with no installed GUI, web page, HTTP API server or browser automation service. The GitHub repository also contains a **source-only local Tkinter Authenticator app** at `python/tests/gui/app.py`, providing multi-account OTP generation with optional encrypted Windows DPAPI vault. The app is not in the published PyPI wheel, does not store a server account or log into remote sites, and uses only the installed PyPI engine for TOTP. See its [installation and security guide](../python/tests/gui/README.md).
 
 ## Start here (actual files)
 

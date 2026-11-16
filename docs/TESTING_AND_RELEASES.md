@@ -136,3 +136,20 @@ Run these from repository root using the **same Python interpreter**. The GUI ch
 - Tkinter GUI launched and closed cleanly; Generate/invalid inputs, mask toggle, live countdown/59→60 rollover refresh, OTP-only clipboard copy, secret-change reset all PASS against the installed engine with a public synthetic fixture.
 - [GitHub CI 43900702231](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702231): Python tests, change detection and Required CI SUCCESS; JavaScript tests SKIPPED as expected. [Branch release validation 43900702066](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702066) PASS; no npm/PyPI publication occurred.
 - The standalone GUI is distributed as a **GitHub source example**, not with the PyPI package. It has not been formally qualified visually across all operating systems. Do not conflate this test example with the KronOTP library's production-security assurance.
+
+## GUI-02 local multi-account Authenticator (source-only)
+
+GUI-02 upgrades the previous tester into a **production-oriented local desktop Authenticator** in [`python/tests/gui/`](../python/tests/gui/README.md): multiple accounts, search/add/edit/delete, `otpauth://totp` import limited to SHA1/6 digits/30 seconds, in-memory Use once, live codes, local verify, 15-second conditional clipboard clear, Windows-only DPAPI CurrentUser encrypted saved accounts, manual Lock and five-minute inactivity lock. It does not modify the published Python engine or ship with the wheel. No independent master password, cross-device vault backup, server authentication or QR scanning.
+
+```powershell
+python -m pip install kron-otp==2.0.0
+python python/tests/gui/app.py
+```
+
+For focused Windows test with the installed PyPI distribution:
+
+```powershell
+python -m unittest discover -s python/tests/gui -p test_app.py -v
+```
+
+These GUI tests are **not automatically executed by the existing Linux GitHub Python CI job**; run on Windows with Tkinter/DPAPI. Published PyPI KronOTP verifies that the source app actually uses the installed engine. GUI-02 test results and CI evidence are recorded in `project/DEVELOPMENT_LOG.md` only after verification. A local app is not full production/security certification; cryptographic at-rest protection applies to Windows vault only and cannot defend against a compromised logged-in Windows user. Preserve external account recovery codes.

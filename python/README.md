@@ -45,11 +45,11 @@ Licensed under the [MIT License](./LICENSE).
 
 ## Optional Tkinter Live TOTP Tester (source-only)
 
-A small Windows-friendly local example is in [tests/gui/app.py](./tests/gui/app.py); see [GUI instructions](./tests/gui/README.md). It uses the **installed PyPI kron-otp==2.0.0 package**, not this repository's editable source:
+A compact **multi-account Tkinter Authenticator application** is in [tests/gui/app.py](./tests/gui/app.py); see [GUI instructions](./tests/gui/README.md). It uses the **installed PyPI kron-otp==2.0.0 package**, not this repository's editable source:
 
 ```powershell
 python -m pip install kron-otp==2.0.0
 python python/tests/gui/app.py
 ```
 
-Run from the **repository root** or run `python app.py` while in `python/tests/gui/`. Requires Tkinter in the selected Python interpreter. This test window masks/show-hides a user-provided Base32 secret, generates six-digit codes, refreshes at the 30-second boundary and copies only the OTP. It neither stores secrets nor authenticates against a server. **The PyPI wheel does not bundle the GUI**, so installing `kron-otp` alone does not provide `app.py`.
+Run from the **repository root** or run `python app.py` while in `python/tests/gui/`. The app manages multiple accounts, accepts Base32 keys or compatible SHA1/6/30 `otpauth://totp` URIs, shows live codes, refreshes each 30 seconds, supports search/edit/delete/local verify, and can keep a temporary secret without saving. On Windows explicit Save uses **DPAPI CurrentUser-encrypted account storage**; there is no master password and recovery requires separately retained authenticator backup codes. Non-Windows uses session-only mode. No app code or vault ships inside the PyPI wheel. See [full security/usage guide](./tests/gui/README.md) before relying on saved accounts.

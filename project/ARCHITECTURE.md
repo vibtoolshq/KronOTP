@@ -1,6 +1,6 @@
 # Architecture & Design Decisions
 
-Verified against tracked source at baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064` (2026-11-16). This is an **npm/PyPI library monorepo**. There is **no product UI, HTTP server, database, queue, background worker, persistent secret store, or application page** in the published libraries. GUI-01 introduces a *source-only, standalone Tkinter demo* under `python/tests/gui/` that is not packaged in PyPI.
+Verified against tracked source at baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064` (2026-11-16). This is an **npm/PyPI library monorepo**. There is **no product UI, HTTP server, database, queue, background worker, persistent secret store, or application page** in the published libraries. GUI-02 extends the *source-only, standalone Tkinter Authenticator application* under `python/tests/gui/` with multi-account management and optional Windows DPAPI-encrypted storage; the app is NOT packaged in PyPI.
 
 ## Components and boundaries
 
@@ -55,3 +55,19 @@ The development `main` input hardening is not yet included in public `v1.0.0` ar
 ## GUI-01 source-only PyPI integration boundary
 
 The optional `python/tests/gui/app.py` uses Python standard-library Tkinter. On startup it requires installed distribution `kron-otp==2.0.0`, compares the resolved `kron_otp.py` module path to the distribution metadata and rejects importing the repository source or a different installed version. The GUI calls `KronOTP.generate(secret)`; it never implements its own TOTP HMAC. The user must press Generate first; a Tkinter `after()` callback updates time remaining and refreshes the OTP on period boundaries while the secret is unchanged. Editing the secret clears state. No filesystem or network persistence, no new runtime dependency, no PyPI GUI packaging and no engine/API modification.
+
+## GUI-02 — local Authenticator architecture
+
+```text
+python/tests/gui/app.py (Tkinter/ttk user interface)
+  ├── installed PyPI kron_otp.KronOTP.generate / verify (SHA1 / 6 / 30 only)
+  ├── python/tests/gui/vault.py (Windows-only DPAPI CurrentUser encrypted vault)
+  │     └── %LOCALAPPDATA%/KronOTP/vault.dat (encrypted JSON envelope)
+  └── optional in-memory one-off account; clipboard conditional expiry / idle lock
+```
+
+- **Engine isolation:** `load_pypi_engine()` requires installed `kron-otp==2.0.0` and the exact installed module filesystem origin, blocking accidental source shadowing. No custom OTP implementation, algorithm change or new dependency.
+- **Data flow:** account form accepts own Base32 secret or `otpauth://totp` (SHA1/6 digits/30s only), engine validates by generating a code, optional Windows saved record goes through DPAPI **before** live account state updates; temporary records stay in memory. Selecting an account calls the engine to generate a six-digit code; a timer updates countdown and refreshes at a step boundary. Local check delegates to engine `.verify` but does not authenticate any site.
+- **Storage threat model:** Windows `%LOCALAPPDATA%/KronOTP/vault.dat` is encrypted by Microsoft CurrentUser DPAPI; no plaintext files/exports. Decryption requires the same Windows user profile, not a separate app password. Vault validates account count/schema, rejects symlinks/bounded malformed files and writes encrypted payload with atomic replace. Running malicious code in the same unlocked OS account can still access secrets. Python process memory and the OTP clipboard are not zeroizable secure enclaves.
+- **Privacy controls:** secret entry masked, explicit Save or Use once, local-only search, App Lock clearing memory, five-minute inactivity timeout, clipboard conditional clearing after 15 seconds. The app has no server sessions, user verification, QR camera, cloud sync, portability, cross-device recovery, online backup, replay denial or throttling. Tests use public synthetic fixtures.
+- **Packaging:** Tkinter app/vault are GitHub source examples outside `python/src/`, not installed by PyPI; the published engine, JS engine, CI workflows and package versions remain unchanged.

@@ -88,3 +88,11 @@ When a deterministic test freezes the clock to Unix epoch seconds 0–29, Python
 ### Remaining production constraints
 
 The owner directed an expedited v2.0.0 release with GitHub branch/tag protection deferred and P04 cross-platform/long-duration/consumer-app assurance still incomplete. Do not infer complete supply-chain protection or an authentication server (replay prevention, rate limits and session control are caller responsibilities).
+
+## Optional KronOTP Authenticator app (Tkinter / GUI-02)
+
+The GitHub source includes a compact [Tkinter Authenticator](../python/tests/gui/README.md) for users who want a standalone local TOTP generator instead of programming an integration. It uses only the published `kron-otp==2.0.0` Python engine for OTP values; install the package and run `python python/tests/gui/app.py` from repository root.
+
+Use **+ Add** to enter an account name and Base32 secret or a matching `otpauth://totp` URI and save the record with Windows-user-bound encryption, or **Use once** to generate without persistence. The app shows per-account current OTP and countdown, supports search/edit/delete, copy, local checking and automatic expiry/refresh. Saved vault location is `%LOCALAPPDATA%\KronOTP\vault.dat` and is decryptable only by the same Windows user/profile. On other OSs, saved vault features are disabled (session-only).
+
+**Security & recovery:** DPAPI is not a master password or protection against malware running under your Windows account. Privacy Lock hides secrets in memory but does not reauthenticate the user. Losing the Windows profile can make the saved vault unrecoverable. Retain site recovery codes in a separate safe place; no plaintext export/QR camera/cloud sync is provided. Clipboard may be exposed for up to 15 seconds. Generated OTP is *not* proof of remote login acceptance; server-side replay prevention and throttling remain the site's responsibility.
