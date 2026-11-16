@@ -82,3 +82,10 @@ The owner directed an expedited major-version release with GitHub main/`v*` tag 
 ### v2.0.0 independently verified distribution snapshot
 
 Release [43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691) passed both publishing jobs. Exact npm and PyPI 2.0.0 public artifacts were clean-installed and tested with public fixture keys (including reject-short-keys and Python epoch 29s); **PASS** in the tested Windows environment. No new v2 GitHub registry-smoke workflow run was made. Main/tag protections and P04 environment/load/CVE qualification remain open; do not convert release success to full security certification.
+
+## GUI-01 security and verification boundary
+
+- GUI-01 is an optional source-only Tkinter consumer with an in-memory masked secret Entry; Show/Hide affects screen visibility, not secret encryption. No key is written to files, external services or stdout by app code. Copy explicitly places only the OTP in the operating-system clipboard.
+- Startup validates both installed `kron-otp==2.0.0` distribution metadata and the imported module's filesystem origin; an editable/local source import is rejected. This ensures the example tests the released PyPI engine rather than silently passing on developer source.
+- GUI's local time-based OTP display is **not** an account login acceptance test; user/server must protect secrets, synchronize clocks, throttle retries and reject replay. It does not add security protections to the library or claim P04 production assurance.
+- GUI-01 focused Tkinter/package integration and code audit results belong to the phase closeout log, not assumed solely from adding a source file. GitHub Python unit CI will not automatically execute an interactive GUI window.

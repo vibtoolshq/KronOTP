@@ -1,6 +1,6 @@
 # Architecture & Design Decisions
 
-Verified against tracked source at baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064` (2026-11-16). This is an **npm/PyPI library monorepo**. There is **no UI, HTTP server, database, queue, background worker, persistent secret store, or application page** in the repository.
+Verified against tracked source at baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064` (2026-11-16). This is an **npm/PyPI library monorepo**. There is **no product UI, HTTP server, database, queue, background worker, persistent secret store, or application page** in the published libraries. GUI-01 introduces a *source-only, standalone Tkinter demo* under `python/tests/gui/` that is not packaged in PyPI.
 
 ## Components and boundaries
 
@@ -23,7 +23,7 @@ The library does **not** discover or obtain shared secrets. The caller supplies 
 
 ## Python engine
 
-- Distribution: `python/pyproject.toml` — `kron-otp` version `1.0.0`, import `kron_otp`, Python >=3.10, setuptools single module under `python/src/`.
+- Distribution: `python/pyproject.toml` — `kron-otp` version `2.0.0`, import `kron_otp`, Python >=3.10, setuptools single module under `python/src/`. The GUI-01 demo under tests is not an installed module.
 - Dependency: `pyotp>=2.12,<3` — performs SHA-1 HMAC/time-step OTP logic. This version requires a Base32-decoded secret of at least 14 bytes.
 - P01 `_normalize_secret` validates ASCII-only Base32, raw <=4096/compact <=1024 characters and >=14 decoded bytes with canonical round-trip. `_totp` creates `pyotp.TOTP` with SHA-1, six digits, interval 30.
 - `generate` uses `.now()`; `verify` uses `.verify(valid_window=1)`.
@@ -38,7 +38,7 @@ The library does **not** discover or obtain shared secrets. The caller supplies 
 
 ## What is *not* implemented
 
-No built-in provisioning URI/QR UI, multi-account management, storage, issuer configuration, custom algorithm/digits/step public API, webhook, app dashboard, browser button, worker scheduler, CLI, secret recovery, replay ledger, or rate-limit service. Documentation must not imply otherwise.
+No built-in provisioning URI/QR UI, multi-account management, storage, issuer configuration, custom algorithm/digits/step public API, webhook, app dashboard, browser button, worker scheduler, CLI, secret recovery, replay ledger, or rate-limit service. The source-only GUI-01 test window is a local consumer example, not a package API or authentication service. Documentation must not imply otherwise.
 
 ## Key technical decisions
 
@@ -51,3 +51,7 @@ No built-in provisioning URI/QR UI, multi-account management, storage, issuer co
 ## P01 scope boundary
 
 The development `main` input hardening is not yet included in public `v1.0.0` artifacts. Python epoch-start verification, CI pipelines, public versions and user-facing application layers remain unchanged; those belong to later approved phases.
+
+## GUI-01 source-only PyPI integration boundary
+
+The optional `python/tests/gui/app.py` uses Python standard-library Tkinter. On startup it requires installed distribution `kron-otp==2.0.0`, compares the resolved `kron_otp.py` module path to the distribution metadata and rejects importing the repository source or a different installed version. The GUI calls `KronOTP.generate(secret)`; it never implements its own TOTP HMAC. The user must press Generate first; a Tkinter `after()` callback updates time remaining and refreshes the OTP on period boundaries while the secret is unchanged. Editing the secret clears state. No filesystem or network persistence, no new runtime dependency, no PyPI GUI packaging and no engine/API modification.

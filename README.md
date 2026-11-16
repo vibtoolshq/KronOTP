@@ -53,7 +53,10 @@ KronOTP/
 │   ├── README.md
 │   ├── src/kron_otp.py
 │   ├── tests/test_kron_otp.py
-│   └── tests/totp_vectors.json  # Shared RFC and synthetic tests
+│   ├── tests/totp_vectors.json  # Shared RFC and synthetic tests
+│   └── tests/gui/              # Optional source-only Tkinter tester
+│       ├── app.py
+│       └── README.md
 ├── docs/                    # Public user documentation and MINIFEST
 ├── project/                 # Developer technical maps, history, MINIFEST
 ├── AGENTS.md                # Pre-change documentation and privacy rules
@@ -96,3 +99,7 @@ v2.0.0 includes the P01/P02 changes on `main`: both engines reject Base32 secret
 - **Official registry artifacts:** [npm kron-otp@2.0.0](https://www.npmjs.com/package/kron-otp/v/2.0.0) and [PyPI kron-otp==2.0.0](https://pypi.org/project/kron-otp/2.0.0/).
 - **Independent public consumer check:** downloaded npm `kron-otp-2.0.0.tgz`, installed into clean temporary Node consumer and validated version, generate/verify, bad-secret nonmatch and short-key rejection. Downloaded official PyPI `kron_otp-2.0.0-py3-none-any.whl`, installed in an isolated Python venv and verified metadata, generate/verify, invalid inputs and Unix-epoch second 29. Both passed. Default pip index initially lagged; specifying `--index-url https://pypi.org/simple` succeeded.
 - **Risk/assurance boundary:** GitHub main/tag protection was explicitly deferred by owner instruction and P04 production acceptance remains untested. v2.0.0 is **published and install-tested**, not fully security-certified; consuming applications still require replay prevention, rate limiting and secure key management.
+
+## Optional Python GUI demo (GUI-01)
+
+The source repository includes a small Tkinter [Live TOTP Tester](./python/tests/gui/README.md) at `python/tests/gui/app.py`. It calls the **installed published PyPI kron-otp==2.0.0 module** and lets you paste a user-owned Base32 key, view live 6-digit codes and a 30-second countdown, and copy the code. The GUI is a **source-only test/demo application**; it is not included in the npm or PyPI packages, does not store secrets and does not verify remote logins.

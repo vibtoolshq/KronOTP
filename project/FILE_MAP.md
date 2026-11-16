@@ -23,6 +23,8 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `python/tests/__init__.py` | Empty test-directory initializer |
 | `python/tests/test_kron_otp.py` | Python `unittest` existing P01 input tests plus P02 fixed-time RFC/epoch/window/80-case shared-fixture regression checks |
 | `python/tests/totp_vectors.json` | P02 shared, **public synthetic** SHA-1 fixed-time fixture (6 RFC and 80 independently computed key/time/OTP cases); consumed by both source suites, not part of runtime exports |
+| `python/tests/gui/app.py` | GUI-01 source-only native Tkinter demo; imports specifically the installed PyPI 2.0.0 distribution, masks key, generates/copies current OTP and shows live countdown; not shipped in wheel |
+| `python/tests/gui/README.md` | GUI-01 install/run, existing authenticator-key input, security limits and test-only provenance guide |
 | `.github/workflows/ci.yml` | Path-filtered source tests; P03 lockfile-safe `npm ci`, Python editable install from package metadata, SHA-pinned actions |
 | `.github/workflows/release.yml` | P03 secure tag-push-only publisher gating, current-main-head tag check, least-privileged token permissions, SHA-pinned action versions |
 | `.github/workflows/registry-smoke.yml` | P03 strict SemVer target resolver, dynamic npm/PyPI download, install and exact-version verification; manual input and manifest-derived push default |

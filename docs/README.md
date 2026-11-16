@@ -9,7 +9,7 @@ This is the **Git-tracked, public** user manual for the **existing** Node.js and
 - Use either the published `kron-otp` Node.js CommonJS package or the published Python `kron_otp` module.
 - Integrate token generation in your own authorized browser automation or other applications.
 
-**What does not exist:** KronOTP is a pair of libraries. It has **no app window, web page, settings panel, buttons, QR-code UI, API server, database, built-in account storage or browser automation service**. Consequently, there are no product screens or buttons to operate. The Playwright/Puppeteer/Selenium guides are examples of how *your* own application's elements may be handled.
+**Product scope:** KronOTP is a pair of libraries; it has **no installed application window, web page, settings panel, QR-code UI, API server, database, built-in account storage or browser automation service**. The repository additionally provides an **optional source-only Tkinter test window** at `python/tests/gui/app.py` to generate and copy codes using the installed PyPI engine. It is not shipped with the package and does not log in to remote accounts. Playwright/Puppeteer/Selenium guides remain consumer integration examples.
 
 ## Start here (actual files)
 
@@ -17,7 +17,7 @@ This is the **Git-tracked, public** user manual for the **existing** Node.js and
 2. [API reference](./API_REFERENCE.md) — existing methods, inputs, outputs, error contracts, defaults, language differences.
 3. [Usage & troubleshooting](./USAGE_AND_TROUBLESHOOTING.md) — end-to-end user workflow, samples, invalid keys, time sync and safety.
 4. [Automation and publishing](./AUTOMATION_AND_PUBLISHING.md) — working-example Playwright, Puppeteer and Selenium patterns; manual and CI publishing procedures.
-5. [Testing & releases](./TESTING_AND_RELEASES.md) — how to test source/published versions and what CI actually verifies.
+5. [Testing & releases](./TESTING_AND_RELEASES.md) — how to test source/published versions, run the optional Tkinter GUI and understand what CI actually verifies.
 6. [MINIFEST](./MINIFEST.md) — full inventory of docs folder files.
 
 ## Keeping public guidance correct

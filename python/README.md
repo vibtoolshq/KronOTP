@@ -42,3 +42,14 @@ See the [integration and publishing guide](../docs/AUTOMATION_AND_PUBLISHING.md)
 Licensed under the [MIT License](./LICENSE).
 
 **v2.0.0 changes:** stricter ASCII-only whitespace and size validation, plus a fix for verifying valid OTPs at Unix seconds 0–29. Older 1.0.0 is not overwritten. This library remains stateless; implement replay prevention and attempt throttling at the relying-party server.
+
+## Optional Tkinter Live TOTP Tester (source-only)
+
+A small Windows-friendly local example is in [tests/gui/app.py](./tests/gui/app.py); see [GUI instructions](./tests/gui/README.md). It uses the **installed PyPI kron-otp==2.0.0 package**, not this repository's editable source:
+
+```powershell
+python -m pip install kron-otp==2.0.0
+python python/tests/gui/app.py
+```
+
+Run from the **repository root** or run `python app.py` while in `python/tests/gui/`. Requires Tkinter in the selected Python interpreter. This test window masks/show-hides a user-provided Base32 secret, generates six-digit codes, refreshes at the 30-second boundary and copies only the OTP. It neither stores secrets nor authenticates against a server. **The PyPI wheel does not bundle the GUI**, so installing `kron-otp` alone does not provide `app.py`.

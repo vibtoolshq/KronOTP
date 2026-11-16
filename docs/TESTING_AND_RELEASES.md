@@ -116,3 +116,16 @@ The owner explicitly authorized publication before the P03 GitHub branch/tag rul
 - Public PyPI `kron-otp==2.0.0`: official PyPI wheel `kron_otp-2.0.0-py3-none-any.whl` downloaded, installed in fresh Python venv with dependency, version/method/weak-key/Unix-epoch regression checks **PASS**. Default local pip index initially lacked 2.0.0 while the official `https://pypi.org/simple` worked; pin the official index or refresh a stale mirror if necessary.
 - These consumer checks ran outside GitHub Actions; the separately version-aware registry-smoke workflow was not manually dispatched for v2.0.0. Do not claim that run exists.
 - v2.0.0 changes JS invalid-secret verify to boolean `false`, both engines enforce >=14 decoded secret bytes and input caps, Python epoch boundary fix. This is a **major compatibility change** from historical 1.0.0. GitHub main/tag protection and P04 long-duration/OS/security tests remain **deferred**, not PASS.
+
+## GUI-01 — optional Tkinter live tester (source-only, no release)
+
+The repository contains [python/tests/gui/app.py](../python/tests/gui/app.py) and [GUI setup/use guide](../python/tests/gui/README.md). This is a **standalone local test app**, not part of the installed PyPI wheel and not a change to KronOTP's public Python API. It only needs Tkinter (usually bundled with Windows Python) and the published PyPI `kron-otp==2.0.0` distribution.
+
+```powershell
+python -m pip install kron-otp==2.0.0
+python python/tests/gui/app.py
+```
+
+Run these from repository root using the **same Python interpreter**. The GUI checks that exact installed distribution version and file origin; it does not use `python/src/kron_otp.py` or an editable checkout. Paste your own Base32 secret, choose Generate OTP, view current code/30s countdown, optionally Show/Hide key and Copy OTP. Display refreshes at the next 30s boundary while enabled and clears when key changes. Invalid input is rejected; no key is logged or saved.
+
+**Limits:** GUI does not authenticate any remote account or implement replay defense/server rate limiting. It is not part of existing Python `unittest` source suite or GitHub Actions GUI/browser automation; normal CI still exercises engine tests. For GUI integration evidence, consult the dated tracked GUI-01 development log after focused local verification. No PyPI/npm package update, build, tag or release is associated with GUI-01.
