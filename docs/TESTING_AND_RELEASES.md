@@ -129,3 +129,10 @@ python python/tests/gui/app.py
 Run these from repository root using the **same Python interpreter**. The GUI checks that exact installed distribution version and file origin; it does not use `python/src/kron_otp.py` or an editable checkout. Paste your own Base32 secret, choose Generate OTP, view current code/30s countdown, optionally Show/Hide key and Copy OTP. Display refreshes at the next 30s boundary while enabled and clears when key changes. Invalid input is rejected; no key is logged or saved.
 
 **Limits:** GUI does not authenticate any remote account or implement replay defense/server rate limiting. It is not part of existing Python `unittest` source suite or GitHub Actions GUI/browser automation; normal CI still exercises engine tests. For GUI integration evidence, consult the dated tracked GUI-01 development log after focused local verification. No PyPI/npm package update, build, tag or release is associated with GUI-01.
+
+### GUI-01 actual test results (2026-11-16)
+
+- Tested on Windows with isolated Python 3.12 virtual environment and **installed official public PyPI `kron-otp==2.0.0`** (not repository source). Startup module path and version guards PASS, including rejection of mismatched local imports.
+- Tkinter GUI launched and closed cleanly; Generate/invalid inputs, mask toggle, live countdown/59→60 rollover refresh, OTP-only clipboard copy, secret-change reset all PASS against the installed engine with a public synthetic fixture.
+- [GitHub CI 43900702231](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702231): Python tests, change detection and Required CI SUCCESS; JavaScript tests SKIPPED as expected. [Branch release validation 43900702066](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702066) PASS; no npm/PyPI publication occurred.
+- The standalone GUI is distributed as a **GitHub source example**, not with the PyPI package. It has not been formally qualified visually across all operating systems. Do not conflate this test example with the KronOTP library's production-security assurance.

@@ -89,3 +89,10 @@ Release [43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/4386745
 - Startup validates both installed `kron-otp==2.0.0` distribution metadata and the imported module's filesystem origin; an editable/local source import is rejected. This ensures the example tests the released PyPI engine rather than silently passing on developer source.
 - GUI's local time-based OTP display is **not** an account login acceptance test; user/server must protect secrets, synchronize clocks, throttle retries and reject replay. It does not add security protections to the library or claim P04 production assurance.
 - GUI-01 focused Tkinter/package integration and code audit results belong to the phase closeout log, not assumed solely from adding a source file. GitHub Python unit CI will not automatically execute an interactive GUI window.
+
+### GUI-01 verified local integration (2026-11-16)
+
+- Isolated Windows Python 3.12 venv installed the **published PyPI `kron-otp==2.0.0`** using the official PyPI index (with PyOTP 2.12.0); module provenance/wrong-version/shadow checks **PASS**.
+- The focused real Tkinter test exercised Generate, masked/visible entry, missing/weak input errors, 30-second countdown, boundary refresh, copying OTP (not secret) and state reset on editing; window startup and scheduled-event close **PASS**.
+- [GUI-01 CI run 43900702231](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702231): Python tests & Required CI **SUCCESS**, JavaScript job correctly SKIPPED. [Release validation 43900702066](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702066): validation **SUCCESS**; publishers SKIPPED.
+- This is verified behaviour only on the tested Windows/Python 3.12 environment and mocked rollover; no multi-OS GUI assurance, external authenticator login verification, secret encryption, replay defense, or P04 security certification was performed.
