@@ -14,7 +14,7 @@ This **Git-tracked, sanitized** history records implementation locations, reason
 | Release preparation | Added `release.yml`, version/metadata, lockfile, MIT licenses and module READMEs | `e77155eefd7d18d49fcde489b510f4fd8df5d797` | CI+release validation PASS |
 | v1.0.0 release | Annotated tag on release-prep commit, npm and PyPI 1.0.0 publication | Tag `v1.0.0` → `e77155eefd7d18d49fcde489b510f4fd8df5d797` | GitHub Actions release run `43835128215` SUCCESS |
 | Published-package checks | Added `.github/workflows/registry-smoke.yml`; npm/PyPI download-install tests | `50df7c42c0d1d83d21fe68097e0d70e46b0ef064` | Workflow run `43836244524` both PASS |
-| 2026-11-16 — documentation infrastructure | Local ignored `notes/`; new `AGENTS.md`; tracked `project/` technical A–Z map, `docs/` user guide index; README/MINIFEST requirements and changelog process | **This phase's commit to be recorded in private completion note and next tracked log update** | Documentation-only; focused verification and Git sync planned |
+| 2026-11-16 — documentation infrastructure | Ignored private `notes/`, new `AGENTS.md`, technical maps and public user guides; per-folder README/MINIFEST requirements | `51ccd1fe9913faa385a2d802199279240a381333` (initial implementation) | `git check-ignore` confirmed private notes excluded, project/docs tracked, GitHub–Local synced, patch check PASS, no engine/workflow changes; **CLOSED** |
 
 ## Per-change log template (append for each future phase)
 
@@ -30,3 +30,11 @@ Commit SHA | GitHub/Local baseline | Release tag (if any) | Gaps | CLOSED / BLOC
 - Include **verified** changelog details in this file *alongside* each code/config update; do not defer until a future release.
 - Keep `FILE_MAP.md`, `FUNCTION_REFERENCE.md` and CI guides synchronized with implementation.
 - No source logic, package version, GitHub workflow or public release is modified by this documentation-only phase.
+
+## 2026-11-16 — Documentation infrastructure verified close-out
+
+- **Scope**: Documentation-only, with root `AGENTS.md`, `.gitignore`, private local `notes/`, tracked `project/` and tracked `docs/`.
+- **Implementation commit**: `51ccd1fe9913faa385a2d802199279240a381333`.
+- **Verification evidence**: three private notes ignored under `.gitignore:49:/notes/`; `git ls-files notes` returned no paths; root GitHub file tree contained no `notes/`; local `main` and `origin/main` matched and status was clean after the fast-forward pull; `git diff --check` passed.
+- **Existing functionality**: JavaScript/Python engine sources, package manifests, tests, release workflows and published v1.0.0 tag were not modified. CI workflows' configured path filters did not trigger for this documentation-only commit.
+- **Follow-up**: This row records the initial implementation SHA and tested state. The commit that adds this close-out record is discoverable from `git log -- project/DEVELOPMENT_LOG.md`; the commit cannot include its own SHA without changing that SHA.

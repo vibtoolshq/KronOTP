@@ -4,8 +4,8 @@
 
 | Module | Install | Import | Status |
 | --- | --- | --- | --- |
-| [JavaScript](./javascript/README.md) | `npm install kron-otp` (after first release) | `require('kron-otp')` | Implemented and tested |
-| [Python](./python/README.md) | `pip install kron-otp` (after first release) | `from kron_otp import KronOTP` | Implemented and tested |
+| [JavaScript](./javascript/README.md) | `npm install kron-otp` | `require('kron-otp')` | Implemented and tested |
+| [Python](./python/README.md) | `pip install kron-otp` | `from kron_otp import KronOTP` | Implemented and tested |
 
 Both implementations generate six-digit SHA-1 TOTP codes with 30-second periods. Verification accepts a ±one-step clock tolerance. Use at least a 160-bit secret for cross-language interoperability; keep real shared secrets out of source control.
 
@@ -38,7 +38,8 @@ print("Valid code:", KronOTP.verify(secret, code))
 KronOTP/
 ├── .github/workflows/
 │   ├── ci.yml              # Change-filtered tests
-│   └── release.yml         # Validation on main, tag-triggered publishing
+│   ├── release.yml         # Validation on main, tag-triggered publishing
+│   └── registry-smoke.yml  # Published v1.0.0 download/install tests
 ├── javascript/
 │   ├── package.json
 │   ├── package-lock.json
@@ -52,11 +53,20 @@ KronOTP/
 │   ├── README.md
 │   ├── src/kron_otp.py
 │   └── tests/test_kron_otp.py
-├── docs/AUTOMATION_AND_PUBLISHING.md
+├── docs/                    # Public user documentation and MINIFEST
+├── project/                 # Developer technical maps, history, MINIFEST
+├── AGENTS.md                # Pre-change documentation and privacy rules
 ├── AI_INSTRUCTIONS.md
 ├── LICENSE
 └── README.md
 ```
+
+## Documentation & development records
+
+- **User guide**: [docs/README.md](./docs/README.md) — installation, complete public API, safe usage, troubleshooting, automation and release guidance.
+- **Maintainer reference**: [project/README.md](./project/README.md) — architecture, full file/function maps, dependency reasoning, CI internals, known gaps and phase log.
+- **Repository agent rules**: [AGENTS.md](./AGENTS.md) and [AI_INSTRUCTIONS.md](./AI_INSTRUCTIONS.md).
+- **Private local-only notes**: `notes/` is deliberately ignored by Git and never published. Its `README.md` and `MINIFEST.md` remain only on an authorized developer's machine.
 
 ## Testing and releases
 
