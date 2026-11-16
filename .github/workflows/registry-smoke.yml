@@ -1,0 +1,150 @@
+name: KronOTP Published Package Smoke Tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/registry-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kronotp-registry-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm:
+    name: npm - download, install, and test v1.0.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Download published npm tarball
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/npm-download"
+          npm pack kron-otp@1.0.0 \
+            --pack-destination "$RUNNER_TEMP/npm-download" \
+            --registry=https://registry.npmjs.org \
+            --ignore-scripts \
+            --cache "$RUNNER_TEMP/npm-cache"
+          test -s "$RUNNER_TEMP/npm-download/kron-otp-1.0.0.tgz"
+          tar -tzf "$RUNNER_TEMP/npm-download/kron-otp-1.0.0.tgz" |
+            grep -Fx 'package/src/kron-otp.js'
+
+      - name: Install downloaded npm release in clean consumer environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/npm-consumer" \
+            "$RUNNER_TEMP/npm-download/kron-otp-1.0.0.tgz" \
+            --registry=https://registry.npmjs.org \
+            --cache "$RUNNER_TEMP/npm-cache" \
+            --no-save --ignore-scripts --no-audit --no-fund
+
+      - name: Test installed npm release
+        shell: bash
+        run: |
+          node <<'JS'
+          const assert = require('node:assert/strict');
+          const path = require('node:path');
+          const packageDir = path.join(process.env.RUNNER_TEMP, 'npm-consumer', 'node_modules', 'kron-otp');
+          const KronOTP = require(packageDir);
+          const manifest = require(path.join(packageDir, 'package.json'));
+          assert.equal(manifest.name, 'kron-otp');
+          assert.equal(manifest.version, '1.0.0');
+
+          // 160-bit public RFC example key; never a live account secret.
+          const secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+          const token = KronOTP.generate(secret);
+          assert.match(token, /^[0-9]{6}$/);
+          assert.equal(KronOTP.verify(secret, token), true);
+          assert.equal(KronOTP.verify('gezd gnbv gy3t qojq gezd gnbv gy3t qojq', token), true);
+          assert.equal(KronOTP.verify(secret, 'invalid'), false);
+          assert.equal(KronOTP.verify(secret, '12345'), false);
+          assert.throws(() => KronOTP.generate('not-base32!'), TypeError);
+          console.log('Published npm kron-otp@1.0.0: smoke tests PASS');
+          JS
+
+      - name: Run original JavaScript source tests
+        shell: bash
+        run: |
+          npm ci --prefix javascript --ignore-scripts --no-audit --no-fund
+          node javascript/tests/test.js
+
+  pypi:
+    name: PyPI - download, install, and test v1.0.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Download published PyPI wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/pypi-download"
+          python -m pip download kron-otp==1.0.0 \
+            --index-url https://pypi.org/simple/ \
+            --no-cache-dir --no-deps --only-binary=:all: \
+            --dest "$RUNNER_TEMP/pypi-download"
+          test -s "$RUNNER_TEMP/pypi-download/kron_otp-1.0.0-py3-none-any.whl"
+
+      - name: Install downloaded wheel in isolated Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/pypi-consumer"
+          "$RUNNER_TEMP/pypi-consumer/bin/python" -m pip install \
+            --index-url https://pypi.org/simple/ \
+            --no-cache-dir \
+            "$RUNNER_TEMP/pypi-download/kron_otp-1.0.0-py3-none-any.whl"
+
+      - name: Test installed PyPI release
+        shell: bash
+        run: |
+          "$RUNNER_TEMP/pypi-consumer/bin/python" <<'PY'
+          import importlib.metadata
+          import re
+          from kron_otp import KronOTP
+
+          assert importlib.metadata.version("kron-otp") == "1.0.0"
+          secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
+          token = KronOTP.generate(secret)
+          assert re.fullmatch(r"[0-9]{6}", token)
+          assert KronOTP.verify(secret, token)
+          assert KronOTP.verify("gezd gnbv gy3t qojq gezd gnbv gy3t qojq", token)
+          assert not KronOTP.verify(secret, "invalid")
+          assert not KronOTP.verify(secret, "12345")
+          assert not KronOTP.verify("not-base32!", "123456")
+          try:
+              KronOTP.generate("JBSWY3DPEHPK3PXP")
+          except ValueError:
+              pass
+          else:
+              raise AssertionError("Short Base32 secret should be rejected")
+          print("Published PyPI kron-otp==1.0.0: smoke tests PASS")
+          PY
+
+      - name: Run original Python source tests
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check 'pyotp>=2.12,<3'
+          cd python
+          python -m unittest discover -s tests -v
