@@ -92,3 +92,11 @@ On a push that changes only this workflow on `main`, the smoke target is derived
 Current GitHub evidence: `main` reports **protected:false**; repository rulesets `[]`; GitHub integration cannot read branch protection (403) or modify rulesets. An authorized repo admin must configure and verify: enforced main branch PR review and appropriate required checks, disallow force pushes and deletion, restricted bypass, and protected `v*` tag creation/update/deletion. Configure environment approval where desired and verify it actually restricts publishing. **A workflow YAML change alone cannot accomplish this.** Do not claim P03 fully CLOSED, or approve P04/P05 release gates, until an authorized owner verifies these controls or explicitly accepts the documented risk.
 
 No new tag, package version, registry upload, credential rotation or production engine change is part of P03.
+
+## Verified P03 workflow results and administrative blocker
+
+- [CI 43855173877](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173877): JavaScript and Python job SUCCESS.
+- [Public registry smoke 43855173893](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173893): select version 1.0.0, download/install/test npm & PyPI; all 3 jobs SUCCESS. Invalid manual version strings were rejected in 7 focused offline resolver checks; future versions must still be tested after their publication.
+- [Release validation 43855173879](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173879): full validation PASS, **npm/PyPI publication SKIPPED** because no version tag was pushed.
+
+**Not a closed release-security phase:** Current GitHub repo has no effective main/tag protection verified (`main protected:false`, rulesets `[]`, protection endpoint 403). An authorized admin must enable and verify those controls (or explicitly accept the risk) before declaring P03 CLOSED; no change was made to engine source, published packages or tags.

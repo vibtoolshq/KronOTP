@@ -63,3 +63,10 @@ Mark each claim as observed from source, CI log, or direct test. Use PASS/FAIL/S
 - CI uses lockfile-safe Node install and Python dependencies defined by distribution metadata; Actions pinned to specific Git commits; release publication constrained to pushed version tags rather than manual tag-targeted dispatch; tag points at current main HEAD.
 - Public registry smoke accepts strict stable SemVer, resolves manifest default on workflow pushes and verifies matching installed package metadata on npm/PyPI; no archive modification or publication in smoke.
 - **KO-007 remains BLOCKED by GitHub permissions/settings:** main `protected:false`, rulesets `[]`, branch-protection read 403. Administrator action + verification mandatory; workflow edits are not equivalent to actual tag/branch protection.
+
+## P03 verified hardening and remaining unverified governance
+
+- `npm ci` and Python editable install from package metadata verified by CI [43855173877](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173877) (both test jobs SUCCESS).
+- Version-aware registry downloads and exact version assertions confirmed for public `1.0.0` by [43855173893](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173893), plus 7 local positive/negative resolver tests. Different future versions will require their own public artifact check.
+- Tag-push-only release jobs, current-main-head check and commit-pinned actions validated in release branch run [43855173879](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173879), with publishers SKIPPED.
+- **KO-007 remains open:** no actual enforced branch/tag protection. GitHub `main protected:false`, rulesets `[]` and protection read 403; code-only guards are insufficient against unauthorized tag creation/repo edits. P03 cannot be fully closed before admin verification or explicit risk acceptance.

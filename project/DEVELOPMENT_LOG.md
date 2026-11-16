@@ -76,3 +76,10 @@ Commit SHA | GitHub/Local baseline | Release tag (if any) | Gaps | CLOSED / BLOC
 - **Unchanged:** JS/Python engines/tests, package names, versions, dependencies, lockfile, README and `v1.0.0` public registries. No tag creation or publishing.
 - **Governance blocked:** GitHub main `protected:false`, rulesets `[]`, protection API 403, no administrative ruleset writer in connected integration. Code changes cannot implement or confirm branch/tag restrictions; KO-007 remains OPEN. No owner risk acceptance given.
 - **Verification, commit and final phase status:** See the later dated closeout entry and local ignored P03 note for actual test jobs/commit IDs. Do not mark full P03 CLOSED unless actual branch/tag protections have been verified.
+
+### P03 workflow patch verification — partial completion, governance BLOCKED
+
+- **Implementation commit:** `10107e53ab68afc83414c1cb0fd542963aa50852` from incoming `7f0a0cc34f7c6dabd4f43cde12963dc7c07083fe`.
+- **CI** [43855173877](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173877): Node & Python tests SUCCESS; **registry smoke** [43855173893](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173893): resolver/npm/PyPI 1.0.0 exact-version install tests SUCCESS; **release validation** [43855173879](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173879): SUCCESS, both publish jobs SKIPPED. Local resolver 7/7 allowed/rejected input cases passed without registry calls.
+- **Patch audit:** 9 changed tracked paths only (3 workflows, related `project/`/`docs/` Markdown). `git diff --check` PASS, engine/manifest Git blob SHAs unchanged, local fast-forward pull completed, ignored private notes not in tracked tree.
+- **Governance no-go:** `main` still `protected:false`, rulesets `[]`, protection API 403 by connector; no ruleset writer. **KO-006 and KO-010 config/test changes verified; KO-007 is NOT CLOSED. P03 is BLOCKED**, pending authorized GitHub admin configuration and verification, not P04-ready under documented roadmap. No tag or npm/PyPI publication.
