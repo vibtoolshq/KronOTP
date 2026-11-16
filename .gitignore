@@ -44,3 +44,6 @@ coverage/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Local-only developer scratchpad: never push or package
+/notes/
