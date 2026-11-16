@@ -1,14 +1,41 @@
 {
   "name": "kron-otp",
   "version": "1.0.0",
-  "description": "Node.js TOTP engine for the KronOTP monorepo (implementation pending).",
-  "private": true,
+  "description": "Lightweight TOTP generation and verification for Node.js.",
+  "license": "MIT",
   "type": "commonjs",
   "main": "src/kron-otp.js",
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vibtoolshq/KronOTP.git",
+    "directory": "javascript"
+  },
+  "homepage": "https://github.com/vibtoolshq/KronOTP#readme",
+  "bugs": {
+    "url": "https://github.com/vibtoolshq/KronOTP/issues"
+  },
+  "keywords": [
+    "totp",
+    "2fa",
+    "otp",
+    "authentication",
+    "automation"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
-    "test": "node -e \"console.error('Tests are not implemented yet.'); process.exit(1)\""
+    "test": "node tests/test.js"
   },
   "dependencies": {
     "otpauth": "^9.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

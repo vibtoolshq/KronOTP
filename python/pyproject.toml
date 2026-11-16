@@ -1,16 +1,29 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "kron-otp"
 version = "1.0.0"
-description = "Python TOTP engine for the KronOTP monorepo (implementation pending)."
+description = "Lightweight TOTP generation and verification for Python."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "pyotp>=2.10,<3",
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["totp", "2fa", "otp", "authentication", "automation"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: OS Independent",
 ]
+dependencies = [
+    "pyotp>=2.12,<3",
+]
+
+[project.urls]
+Homepage = "https://github.com/vibtoolshq/KronOTP"
+Repository = "https://github.com/vibtoolshq/KronOTP"
+Issues = "https://github.com/vibtoolshq/KronOTP/issues"
 
 [tool.setuptools]
 py-modules = ["kron_otp"]

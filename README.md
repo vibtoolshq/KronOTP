@@ -1,81 +1,73 @@
 # KronOTP
 
-**KronOTP** is a multi-language toolkit for time-based one-time passwords (TOTP), designed for authorized two-factor authentication (2FA) integrations and automated testing.
+**KronOTP** is a small, open-source monorepo containing independent Node.js and Python TOTP generators/verifiers for authorized two-factor authentication integrations and automation.
 
-> **Project status: Foundation / in development.** The JavaScript and Python package layouts and dependency configuration are in place, but code generation, verification, and tests have **not** been implemented yet. Do not use this repository as a working authenticator until those phases are completed and verified.
+| Module | Install | Import | Status |
+| --- | --- | --- | --- |
+| [JavaScript](./javascript/README.md) | `npm install kron-otp` (after first release) | `require('kron-otp')` | Implemented and tested |
+| [Python](./python/README.md) | `pip install kron-otp` (after first release) | `from kron_otp import KronOTP` | Implemented and tested |
 
-## Language modules
+Both implementations generate six-digit SHA-1 TOTP codes with 30-second periods. Verification accepts a ±one-step clock tolerance. Use at least a 160-bit secret for cross-language interoperability; keep real shared secrets out of source control.
 
-| Language | Directory | Package name | Planned engine dependency | Status |
-| --- | --- | --- | --- | --- |
-| Node.js / JavaScript | [`javascript/`](./javascript/) | `kron-otp` (npm) | [`otpauth`](https://www.npmjs.com/package/otpauth) | Scaffolded; implementation pending |
-| Python | [`python/`](./python/) | `kron-otp` (PyPI) | [`pyotp`](https://pypi.org/project/PyOTP/) | Scaffolded; implementation pending |
+## Example
 
-Each module has its own package metadata, source directory, and test directory. Implementations will be developed and tested independently while targeting consistent TOTP behavior.
+Node.js (from `javascript/` during development):
 
-## Repository structure
+```js
+const KronOTP = require('./src/kron-otp');
+const secret = process.env.TOTP_SECRET;
+if (!secret) throw new Error('TOTP_SECRET is required');
+const code = KronOTP.generate(secret);
+console.log('Valid code:', KronOTP.verify(secret, code));
+```
+
+Python (from `python/` during development):
+
+```python
+import os
+from src.kron_otp import KronOTP
+
+secret = os.environ["TOTP_SECRET"]
+code = KronOTP.generate(secret)
+print("Valid code:", KronOTP.verify(secret, code))
+```
+
+## Repository layout
 
 ```text
 KronOTP/
-├── .gitignore
-├── LICENSE                 # Placeholder; license text pending
-├── README.md               # Monorepo overview
-├── AI_INSTRUCTIONS.md      # Development scope and safety rules
+├── .github/workflows/
+│   ├── ci.yml              # Change-filtered tests
+│   └── release.yml         # Validation on main, tag-triggered publishing
 ├── javascript/
 │   ├── package.json
+│   ├── package-lock.json
+│   ├── LICENSE
 │   ├── README.md
-│   ├── src/
-│   │   └── kron-otp.js
-│   └── tests/
-│       └── test.js
-└── python/
-    ├── pyproject.toml
-    ├── README.md
-    ├── src/
-    │   ├── __init__.py
-    │   └── kron_otp.py
-    └── tests/
-        ├── __init__.py
-        └── test_kron_otp.py
+│   ├── src/kron-otp.js
+│   └── tests/test.js
+├── python/
+│   ├── pyproject.toml
+│   ├── LICENSE
+│   ├── README.md
+│   ├── src/kron_otp.py
+│   └── tests/test_kron_otp.py
+├── docs/AUTOMATION_AND_PUBLISHING.md
+├── AI_INSTRUCTIONS.md
+├── LICENSE
+└── README.md
 ```
 
-## Development roadmap
+## Testing and releases
 
-1. **Foundation:** Create the monorepo structure and package configuration.
-2. **Core implementation:** Implement TOTP generation and verification in each language using the configured dependency.
-3. **Validation:** Add RFC 6238 test vectors, boundary and invalid-input tests, and cross-language consistency checks.
-4. **Release readiness:** Finish module documentation, licensing, CI checks, and package publishing requirements.
+Run `npm ci && npm test` in `javascript/`. Run `python -m pip install -e .` then `python -m unittest discover -s tests -v` in `python/`.
 
-These are planned milestones, **not** claims of completed features or standards compliance.
+GitHub Actions tests both packages. A version tag like `v1.0.0` triggers release validation and, **only after validation succeeds**, publishes to npm and PyPI using organization secrets `NPM_TOKEN` and `PYPI_API_TOKEN`. Do not push a release tag until both secrets are correctly scoped and rotated if exposed. The publishing jobs are skipped for ordinary branch pushes.
 
-## Local setup
+See [Automation & Publishing](./docs/AUTOMATION_AND_PUBLISHING.md) for setup, release requirements, and security notes. Publishing is not a transaction across registries: one package can be published even if the other registry rejects its upload.
 
-Use a separate package manager in each module:
+## Security and license
 
-**Node.js**
+Only use TOTP with accounts and environments you are authorized to access; protect provisioning secrets, ensure synchronized time, and apply replay prevention and throttling in the server-side authentication flow.
 
-```powershell
-cd javascript
-npm install
-```
-
-**Python (3.10+)**
-
-```powershell
-cd python
-python -m pip install -e .
-```
-
-These commands configure dependencies only. The source modules and tests remain placeholders in this phase. The JavaScript test command intentionally reports that tests are not implemented, rather than incorrectly reporting a passing suite.
-
-## Security
-
-TOTP relies on a shared secret and synchronized time. Only generate codes for accounts and test environments you own or are authorized to access. Never commit, log, or expose real TOTP secrets.
-
-## Contributing
-
-Review [`AI_INSTRUCTIONS.md`](./AI_INSTRUCTIONS.md) before making changes. Keep work scoped to the requested phase, preserve module boundaries, and add focused verification when implementing behavior.
-
-## License
-
-The root [`LICENSE`](./LICENSE) file is currently empty. Licensing terms must be added before distributing or publishing KronOTP.
+KronOTP is distributed under the [MIT License](./LICENSE).

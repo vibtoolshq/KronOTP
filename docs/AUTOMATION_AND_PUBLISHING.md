@@ -1,6 +1,6 @@
 # KronOTP — Automation Integration & Publishing Guide
 
-> **Scope:** Authorized testing and integration only. This document describes manual publishing; nothing in the repository currently publishes packages automatically. The current CI workflow runs tests only.
+> **Scope:** Authorized testing and integration only. Automated publishing is configured in `.github/workflows/release.yml`: stable `vX.Y.Z` tag pushes validate both packages and then publish to npm and PyPI. The manual commands below are alternatives for maintainers. No packages have been published by adding this workflow.
 >
 > **Compatibility:** Both engines use SHA-1, six digits, and a 30-second period. The Python dependency currently enforces a minimum decoded secret length of 14 bytes; prefer a securely generated 20-byte (160-bit) or longer Base32 secret. Do not use the public example test key for a real account.
 
@@ -181,18 +181,37 @@ Run `python selenium_2fa.py` with the same four environment variables supplied s
 
 ### 2.1 Mandatory release-readiness checks
 
-**Publishing is not enabled yet.** These repository items must be completed and reviewed in a separate release-preparation change before either distribution is publicly released:
+**Release workflow configuration is in place.** Before pushing the first version tag, verify the following:
 
-- Root `LICENSE` is currently empty. Select and add a real license with correct ownership information, and ensure it is included in both distributions (e.g. by adding a license file under each module or configuring inclusion).
-- `javascript/README.md` and `python/README.md` are empty. Add usage, supported Node/Python versions, install guidance, security notes, and a license reference.
-- `javascript/package.json` currently has `"private": true` (which blocks npm publication) and an intentionally failing placeholder `npm test` script. Update these during release preparation and verify that `npm test` executes `node tests/test.js`.
+- Root and module `LICENSE` files contain MIT terms. Confirm that the copyright attribution matches the owners' approved licensing choice before public release.
+- Both module READMEs include usage, versions, testing and license guidance. Review content before the first public release.
+- JavaScript `private: true` has been removed and `npm test` executes `node tests/test.js`; the lockfile supports reproducible `npm ci`.
 - Check npm and PyPI package-name ownership/availability for `kron-otp`. The same project name on two registries does not guarantee the same owner or availability.
 - Review package metadata, cross-language behavior, TOTP interoperability, tests, and the contents of distribution archives; do not publish real shared secrets, temporary files, or test credentials.
-- Existing `.github/workflows/ci.yml` **tests** changes; it does **not** publish packages. A successful CI run is not itself a release approval.
+- `.github/workflows/ci.yml` runs targeted tests. `.github/workflows/release.yml` performs complete release checks on a tag and publishes only when checks succeed. A CI success alone does not authorize a release.
 
-Publishing commands below are **manual instructions**, not commands that this guide or CI executes.
+Publishing commands below are **manual alternatives**. The release workflow uses the organization secrets `NPM_TOKEN` and `PYPI_API_TOKEN`, and executes registry uploads only after release validation succeeds.
 
-### 2.2 Publish `javascript/` to npm
+### 2.2 Automated tag releases
+
+The file [`.github/workflows/release.yml`](../.github/workflows/release.yml) is triggered by `vMAJOR.MINOR.PATCH` tags. Validation checks that both package versions match the tag, the tagged commit is on `main`, tests pass, and the npm and Python distribution contents build successfully. The npm and PyPI publishing jobs run only after validation.
+
+GitHub organization Actions secrets (available to this public repository): `NPM_TOKEN` and `PYPI_API_TOKEN`. Confirm correct access at **GitHub organization Settings → Secrets and variables → Actions**; secret values cannot be read back. The PyPI token appeared in a shared screenshot: **revoke it, create a new appropriately scoped token, and replace the GitHub secret before tagging**.
+
+The npm bypass-2FA token is over-privileged if granted all packages and organization write access; scope it to the publishing identity and migrate to [npm Trusted Publishing (OIDC)](https://docs.npmjs.com/trusted-publishers/). npm plans to end direct publication from bypass-2FA granular tokens in January 2027. For a new PyPI project, the first API token must have permission to create the project; afterwards prefer a project-scoped token or [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/using-a-publisher/).
+
+After checking permissions, licensing, registry names, and the validation run, manually push a release tag from an updated `main` branch:
+
+~~~powershell
+git switch main
+git pull --ff-only origin main
+git tag -a v1.0.0 -m "KronOTP v1.0.0"
+git push origin v1.0.0
+~~~
+
+**Do not push this example tag until secrets are rotated and reviewed.** Both registries need publishing authority for `kron-otp`; a package name that is unavailable or owned by someone else will reject the upload. Each new release must bump **both** manifest versions and use a new matching tag (e.g. `v1.0.1`). Two separate registries are not atomic: one may publish even if the other rejects the upload. Inspect the release run before retrying; do not reuse an already published version.
+
+### 2.3 Publish `javascript/` to npm manually
 
 From Windows PowerShell:
 
@@ -201,10 +220,6 @@ cd C:\Users\Administrator\Desktop\project\KronOTP\javascript
 
 # Inspect the package name and currently published versions.
 npm view kron-otp version
-
-# Release-preparation edits (review and commit them before publishing).
-npm pkg delete private
-npm pkg set "scripts.test=node tests/test.js"
 
 # Install, test, and inspect the exact package payload.
 npm install
@@ -227,7 +242,7 @@ npm publish
 
 npm documentation: https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/
 
-### 2.3 Publish `python/` to PyPI using Twine
+### 2.4 Publish `python/` to PyPI manually using Twine
 
 Install Python 3.10+ on the publishing machine first. From Windows PowerShell:
 
@@ -255,13 +270,13 @@ python -m twine upload dist/*
 - For manual API-token upload, use username `__token__` and the full PyPI project-scoped token as the password. Never print, commit, or embed the token in a shell command.
 - Optionally practice on TestPyPI using `python -m twine upload --repository testpypi dist/*`, with separately configured TestPyPI credentials.
 - Only build fresh, reviewed distributions for each release; do not re-upload an already published version. Bump `[project].version` for each new release.
-- For future *automated* releases, PyPI recommends OIDC **Trusted Publishing** in a dedicated, explicitly approved release workflow, rather than storing long-lived tokens in CI.
+- GitHub Actions publishing is configured using the stored PyPI API token; for future releases, migrate to PyPI OIDC Trusted Publishing rather than a long-lived secret.
 
 Packaging and PyPI documentation:
 - https://packaging.python.org/en/latest/flow/
 - https://docs.pypi.org/publishing/publishing-to-pypi/
 - https://docs.pypi.org/trusted-publishers/using-a-publisher/
 
-### 2.4 Release verification and support
+### 2.5 Release verification and support
 
-After a successful manual release, install each package in a fresh environment and run a generation/verification smoke test using an authorized **nonproduction** secret. Ensure both runtimes agree on SHA-1, six digits, a 30-second period, and accepted secrets. Confirm that each package's registry page, module README, license, and version are correct. Keep the GitHub CI workflow separate from authenticated publication unless you explicitly design and review a release workflow.
+After a successful automated or manual release, install each package in a fresh environment and run a generation/verification smoke test using an authorized **nonproduction** secret. Ensure both runtimes agree on SHA-1, six digits, a 30-second period, and accepted secrets. Confirm that each package's registry page, module README, license, and version are correct. The separate release workflow publishes from version tags only; regular CI never receives publishing secrets.

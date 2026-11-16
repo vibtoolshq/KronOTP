@@ -1,0 +1,181 @@
+name: KronOTP Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - '.github/workflows/release.yml'
+      - 'javascript/package.json'
+      - 'javascript/package-lock.json'
+      - 'javascript/README.md'
+      - 'javascript/LICENSE'
+      - 'python/pyproject.toml'
+      - 'python/README.md'
+      - 'python/LICENSE'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kronotp-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Verify release and both packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Verify tag, package versions, and release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "::error::Expected a stable version tag such as v1.0.0"; exit 1;
+            }
+            git fetch origin main --no-tags
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+              echo "::error::Release tag must point to a commit on main"; exit 1;
+            }
+          fi
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import tomllib
+
+          js = json.loads(pathlib.Path("javascript/package.json").read_text())
+          py = tomllib.loads(pathlib.Path("python/pyproject.toml").read_text())
+          version = js["version"]
+          assert js["name"] == py["project"]["name"] == "kron-otp"
+          assert version == py["project"]["version"], "Package versions differ"
+          assert not js.get("private", False), "npm publishing disabled by private=true"
+          assert js["scripts"]["test"] == "node tests/test.js", "npm test is not active"
+          assert js["dependencies"]["otpauth"], "Missing npm dependency"
+          assert "pyotp" in str(py["project"]["dependencies"]), "Missing PyOTP dependency"
+          for filename in ("LICENSE", "javascript/LICENSE", "python/LICENSE",
+                           "javascript/README.md", "python/README.md"):
+              assert pathlib.Path(filename).stat().st_size > 0, filename + " is empty"
+          if os.environ["GITHUB_REF_TYPE"] == "tag":
+              assert os.environ["GITHUB_REF_NAME"] == "v" + version, "Tag and package version mismatch"
+          print("Version and release metadata verified:", version)
+          PY
+
+      - name: Install Node.js dependencies (locked)
+        working-directory: javascript
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Test JavaScript engine
+        working-directory: javascript
+        run: npm test
+
+      - name: Inspect npm publish payload
+        working-directory: javascript
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json > "$RUNNER_TEMP/kronotp-npm-pack.json"
+          node - "$RUNNER_TEMP/kronotp-npm-pack.json" <<'NODE'
+          const fs = require('node:fs');
+          const item = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'))[0];
+          const files = new Set(item.files.map(entry => entry.path));
+          for (const required of ['src/kron-otp.js', 'README.md', 'LICENSE', 'package.json']) {
+            if (!files.has(required)) throw new Error('npm package missing: ' + required);
+          }
+          console.log('npm package payload validated:', item.files.length, 'files');
+          NODE
+
+      - name: Install Python build and test dependencies
+        run: python -m pip install --disable-pip-version-check -e ./python build twine
+
+      - name: Test Python engine
+        working-directory: python
+        run: python -m unittest discover -s tests -v
+
+      - name: Build and verify Python distributions
+        working-directory: python
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m build --outdir dist
+          python -m twine check dist/*
+          python -m pip install --no-deps --force-reinstall dist/*.whl
+          python - <<'PY'
+          from kron_otp import KronOTP
+          secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
+          token = KronOTP.generate(secret)
+          assert len(token) == 6 and KronOTP.verify(secret, token)
+          print("Installed Python wheel smoke test passed")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kronotp-python-dist
+          path: python/dist/*
+          if-no-files-found: error
+          retention-days: 3
+
+  npm:
+    name: Publish npm
+    needs: validate
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - name: Publish to npm
+        working-directory: javascript
+        run: npm publish --ignore-scripts --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi:
+    name: Publish PyPI
+    needs: validate
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kronotp-python-dist
+          path: dist
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install Twine
+        run: python -m pip install --disable-pip-version-check twine
+      - name: Publish to PyPI
+        run: python -m twine upload --non-interactive dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
