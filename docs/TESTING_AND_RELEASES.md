@@ -20,7 +20,7 @@ python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
 
-Actual tests check generation, six-digit formatting, verification, secret normalization, and malformed tokens/secrets. They do **not** contain a complete cross-language fixed-time RFC vector suite. Python's current suite has 4 test methods; JS uses `node:assert/strict`.
+**Development `main` after P02:** Existing input/generation tests remain and both source suites also consume `python/tests/totp_vectors.json`: 6 fixed-time RFC 6238 SHA-1 six-digit reference values (including leading zeros) plus 80 deterministic, public synthetic 160-bit secret/time/OTP cases. JS uses `node:assert/strict` with a temporary `Date.now` mock; Python runs 9 `unittest` methods with a temporary PyOTP clock mock. Both cover Unix times 0,1,29,30,59,60,61, adjacent windows and two-step rejections. This is a **source test**, not a new published version or end-to-end authentication certification.
 
 ## GitHub Actions workflows
 
@@ -70,3 +70,7 @@ Do **not** reuse `v1.0.0` or republish `1.0.0`; it is already released. Existing
 Do not copy actual shared TOTP secrets, registry tokens or private notes into scripts or documentation. These tests cannot certify server-side OTP replay prevention, account authentication, login UI or unimplemented features.
 
 More integration and manual publishing detail: [Automation and Publishing](./AUTOMATION_AND_PUBLISHING.md).
+
+## P02 shared vectors and source test prerequisites
+
+The Node source-test file reads the shared fixture at `../python/tests/totp_vectors.json` relative to the `javascript/` directory (resolved from `javascript/tests/test.js`); it requires the **full KronOTP monorepo checkout**, not an isolated npm tarball. Python source tests read that same JSON next to `python/tests/test_kron_otp.py`. Runtime imports and published package contents do not depend on the test fixture. The P02 fix and regression tests reside on `main`; npm/PyPI published `1.0.0` remains unchanged until an authorized future tag release.

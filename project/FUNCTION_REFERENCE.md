@@ -1,6 +1,6 @@
 # Engine Function-Level Technical Reference
 
-Verified against `javascript/src/kron-otp.js` and `python/src/kron_otp.py` on development `main` after P01 (frozen baseline `b4192dc`). Published `1.0.0` packages retain their historical input contracts. Methods listed are **existing** methods, not planned APIs.
+Verified against `javascript/src/kron-otp.js` and `python/src/kron_otp.py` on development `main` after P02 (frozen baseline `b4192dc`). Published `1.0.0` packages retain their historical input contracts. Methods listed are **existing** methods, not planned APIs.
 
 ## JavaScript: `javascript/src/kron-otp.js`
 
@@ -20,12 +20,12 @@ Errors: `generate` rejects missing/non-string, malformed, <14-byte or oversized 
 
 | Function / element | Visibility | Inputs → output | Exact purpose |
 | --- | --- | --- | --- |
-| `import base64, binascii, hashlib, re, pyotp` | Imports | Dependencies | Base32 canonicalization, SHA-1 digest selection, token regex, TOTP library |
+| `import base64, binascii, hashlib, re, time, pyotp` | Imports | Dependencies | Base32 canonicalization, SHA-1 digest selection, token regex, single system clock snapshot and TOTP library |
 | `class KronOTP` | Public import | Class | Stateless static-method facade |
 | `@staticmethod _normalize_secret(secret: str) -> str` | Internal | Base32 string → normalized unpadded Base32 | Rejects non-string/invalid characters, normalizes ASCII whitespace via `re.sub`/uppercase, rejects non-ASCII before uppercasing; checks raw/compact limits and >=14 decoded bytes; validates canonical encoding by Base32 decode/re-encode |
 | `@staticmethod _totp(secret: str) -> pyotp.TOTP` | Internal | Base32 string → configured TOTP | Calls normalization, configures digits=6, interval=30, digest=SHA1; both wrapper and PyOTP enforce >=14 decoded bytes |
 | `@staticmethod generate(secret: str) -> str` | Public | Base32 string → six-character string | Invokes `.now()`; translates expected invalid-secret exceptions to `ValueError` |
-| `@staticmethod verify(secret: str, token: str) -> bool` | Public | Base32 string, token → boolean | Returns false on invalid token, normalized/decoded invalid secret, or OTP mismatch; calls `.verify(valid_window=1)` |
+| `@staticmethod verify(secret: str, token: str) -> bool` | Public | Base32 string, token → boolean | Returns false for expected invalid input/mismatch; samples clock once; at Unix counter 0 compares only valid counters 0/+1 using PyOTP `valid_window=0`; otherwise uses original PyOTP `valid_window=1` |
 
 `python/src/__init__.py` is empty and is not the exposed PyPI module; `pyproject.toml` uses `py-modules = ["kron_otp"]` with package dir `src`.
 
@@ -44,7 +44,7 @@ Errors: `generate` rejects missing/non-string, malformed, <14-byte or oversized 
 | 80-bit canonical Base32 | Rejected (P01) | Rejected |
 | 160-bit canonical Base32 | Supported | Supported |
 
-**P01 input contract:** Both enforce >=14 decoded bytes; <=4096 raw chars, <=1024 chars after ASCII-whitespace removal; malformed secrets rejected by `generate` and treated as nonmatches by `verify`. Use a cryptographically random >=20-byte secret for new account provisioning. **Remaining:** Python verification at Unix epoch first 30 seconds is a known P02 issue. This is the development `main` contract, NOT yet a published update to registry v1.0.0.
+**P01 input contract:** Both enforce >=14 decoded bytes; <=4096 raw chars, <=1024 chars after ASCII-whitespace removal; malformed secrets rejected by `generate` and treated as nonmatches by `verify`. Use a cryptographically random >=20-byte secret for new account provisioning. **P02 correction:** Python now avoids counter -1 at Unix epoch time 0–29 and accepts valid counters 0/+1, retaining ordinary ±1 window elsewhere. This is the development `main` contract, NOT yet a published update to registry v1.0.0.
 
 ## Consumer inputs and usage
 
@@ -53,3 +53,7 @@ A provided TOTP *shared secret* (not a generated code) is required. Typical exam
 - Python: `from kron_otp import KronOTP; token = KronOTP.generate(secret)`.
 
 Neither wrapper accepts a configurable timestamp, issuer, algorithm, digits, period, secret storage, replay ledger or server-side rate limiter through its public API.
+
+## P02 deterministic cross-engine coverage
+
+The new source-only `python/tests/totp_vectors.json` contains six RFC 6238 SHA-1 known 6-digit outputs (including leading zeroes) and 80 synthetic 160-bit secret/time/expected-OTP cases from an independent HMAC reference calculation. `javascript/tests/test.js` and `python/tests/test_kron_otp.py` assert matching generated results and verification against the same fixture, plus epoch/rollover/two-step-outside behaviors. No new public timestamp API or runtime dependency was introduced. Package versions on npm/PyPI remain 1.0.0 and do not contain P01/P02 source changes.

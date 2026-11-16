@@ -3,9 +3,16 @@
 Run from python/: python -m unittest discover -s tests -v
 """
 
+import json
+from pathlib import Path
+from unittest import mock
 import unittest
 
 from src.kron_otp import KronOTP
+
+_VECTORS = json.loads(
+    Path(__file__).with_name("totp_vectors.json").read_text(encoding="utf-8")
+)
 
 
 class KronOTPTests(unittest.TestCase):
@@ -64,6 +71,66 @@ class KronOTPTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             KronOTP.generate(at_clean_limit + "AA")
         self.assertFalse(KronOTP.verify(at_clean_limit + "AA", token))
+
+
+    @staticmethod
+    def _at(timestamp: int, secret: str) -> str:
+        with mock.patch("pyotp.totp.time.time", return_value=timestamp):
+            return KronOTP.generate(secret)
+
+    @staticmethod
+    def _verify_at(timestamp: int, secret: str, token: str) -> bool:
+        with mock.patch("pyotp.totp.time.time", return_value=timestamp):
+            return KronOTP.verify(secret, token)
+
+    def test_rfc6238_sha1_six_digit_fixed_vectors(self) -> None:
+        cases = _VECTORS["rfc6238_sha1_6digits"]
+        self.assertEqual(len(cases), 6)
+        self.assertTrue(any(v["otp"].startswith("0") for v in cases))
+        for case in cases:
+            with self.subTest(timestamp=case["timestamp"]):
+                t, expected = case["timestamp"], case["otp"]
+                self.assertEqual(self._at(t, self.SECRET), expected)
+                self.assertTrue(self._verify_at(t, self.SECRET, expected))
+
+    def test_deterministic_cross_language_reference_vectors(self) -> None:
+        cases = _VECTORS["cross_language"]
+        self.assertEqual(len(cases), 80)
+        for case in cases:
+            t, key, expected = case["timestamp"], case["secret"], case["otp"]
+            with self.subTest(case=case["case"], timestamp=t):
+                self.assertEqual(self._at(t, key), expected)
+                self.assertTrue(self._verify_at(t, key, expected))
+
+    def test_epoch_and_drift_boundaries(self) -> None:
+        current = self._at(29, self.SECRET)
+        next_token = self._at(30, self.SECRET)
+        plus_two = self._at(60, self.SECRET)
+        self.assertEqual(self._at(0, self.SECRET), current)
+        for t in (0, 1, 29):
+            with self.subTest(timestamp=t):
+                self.assertTrue(self._verify_at(t, self.SECRET, current))
+                self.assertTrue(self._verify_at(t, self.SECRET, next_token))
+                self.assertFalse(self._verify_at(t, self.SECRET, plus_two))
+        for t in (30, 59):
+            with self.subTest(timestamp=t):
+                self.assertTrue(self._verify_at(t, self.SECRET, current))
+                self.assertTrue(self._verify_at(t, self.SECRET, next_token))
+                self.assertTrue(self._verify_at(t, self.SECRET, plus_two))
+
+        plus_three = self._at(90, self.SECRET)
+        plus_four = self._at(120, self.SECRET)
+        for t in (60, 61):
+            with self.subTest(timestamp=t):
+                self.assertTrue(self._verify_at(t, self.SECRET, next_token))
+                self.assertTrue(self._verify_at(t, self.SECRET, plus_two))
+                self.assertTrue(self._verify_at(t, self.SECRET, plus_three))
+                self.assertFalse(self._verify_at(t, self.SECRET, current))
+                self.assertFalse(self._verify_at(t, self.SECRET, plus_four))
+
+        self.assertFalse(self._verify_at(-1, self.SECRET, current))
+        self.assertTrue(self._verify_at(29, self.SECRET, current))
+        self.assertTrue(self._verify_at(29, self.SECRET, current))
 
 
 if __name__ == "__main__":

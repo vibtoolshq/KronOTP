@@ -49,3 +49,13 @@ Commit SHA | GitHub/Local baseline | Release tag (if any) | Gaps | CLOSED / BLOC
 - **Implementation commit:** `30e02b1456e59f383121bdb1e9be9210cf9f1d00` (GitHub `main`); Windows local fast-forward pulled. Follow-up documentation-only patch-audit closeout commit is visible in Git history.
 - **Focused verification:** Node P01 test PASS; Python P01 unittest **6/6 PASS**. GitHub [CI run 43847176070](https://github.com/vibtoolshq/KronOTP/actions/runs/43847176070): detect, Node and Python jobs all SUCCESS. GitHub [release validation 43847175995](https://github.com/vibtoolshq/KronOTP/actions/runs/43847175995): validation SUCCESS, npm and PyPI publishing SKIPPED. Source patch whitespace/scope check PASS; GitHub/local HEAD matched after initial pull.
 - **Patch audit:** No new P01 engine defect detected by targeted cases; corrected outdated `project/`/`docs/` descriptions without modifying runtime in closeout. All KO-001/003/004/008 addressed **on development main only**. P02 epoch bug and P03/P04 security/CI requirements remain OPEN.
+
+## 2026-11-16 — Production Hardening P02: time correctness and deterministic source tests
+
+- **Incoming baseline:** `3c14a1bd284f6ad91c758a6a7e566246d6a7a1b1`, P01 CLOSED.
+- **Scope Lock:** KO-002 Python epoch-boundary bug, KO-005 deterministic regression gaps only; no public API, dependency, workflow or publishing change.
+- **Root cause:** PyOTP 2.12 `TOTP.verify(valid_window=1)` evaluates negative counter −1 first when time is 0–29s since Unix epoch and raises `ValueError`; KronOTP previously returned `False` even for a correct token.
+- **Implementation:** Python `verify` snapshots system time and at counter zero checks only current and next valid counters via PyOTP's zero-window verify; at all other times retains the original ±1 window. Original secret validation, SHA-1/6/30, boolean result semantics and stateless behavior remain unchanged.
+- **Deterministic tests:** Shared public-only `python/tests/totp_vectors.json` with six RFC SHA-1 last-six-digit outputs and 80 independent synthetic vectors, consumed by both JS and Python source test suites; additional boundary tests 0,1,29,30,59,60,61, ±1, two-step-outside and leading zeros. No new dependency or runtime timestamp API.
+- **Tracked files:** `python/src/kron_otp.py`, both engine test suites, `python/tests/totp_vectors.json`, relevant technical/public docs and file map.
+- **Publishing boundary:** npm/PyPI 1.0.0 not updated; no tag/version or workflow changes. CI and patch audit closeout evidence: recorded in local private phase note and ensuing Git history after execution.

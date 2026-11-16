@@ -1,0 +1,514 @@
+{
+  "purpose": "Public synthetic, fixed-time SHA-1 six-digit TOTP reference vectors for KronOTP source CI",
+  "period": 30,
+  "digits": 6,
+  "algorithm": "SHA1",
+  "rfc6238_sha1_6digits": [
+    {
+      "timestamp": 59,
+      "otp": "287082"
+    },
+    {
+      "timestamp": 1111111109,
+      "otp": "081804"
+    },
+    {
+      "timestamp": 1111111111,
+      "otp": "050471"
+    },
+    {
+      "timestamp": 1234567890,
+      "otp": "005924"
+    },
+    {
+      "timestamp": 2000000000,
+      "otp": "279037"
+    },
+    {
+      "timestamp": 20000000000,
+      "otp": "353130"
+    }
+  ],
+  "cross_language": [
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 29,
+      "otp": "769658"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 30,
+      "otp": "627498"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 31,
+      "otp": "627498"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 59,
+      "otp": "627498"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 60,
+      "otp": "000241"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 61,
+      "otp": "000241"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 1234567890,
+      "otp": "222239"
+    },
+    {
+      "case": 0,
+      "secret": "RPQD62VH37DWZ7WGLDMBABJE4DZCFZO6",
+      "timestamp": 2000000000,
+      "otp": "751705"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 29,
+      "otp": "367134"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 30,
+      "otp": "994017"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 31,
+      "otp": "994017"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 59,
+      "otp": "994017"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 60,
+      "otp": "776564"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 61,
+      "otp": "776564"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 1234567890,
+      "otp": "159015"
+    },
+    {
+      "case": 1,
+      "secret": "CPDYIGUT3TPQ4DKB536UDSR25J3JR4ZE",
+      "timestamp": 2000000000,
+      "otp": "354146"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 29,
+      "otp": "846958"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 30,
+      "otp": "322267"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 31,
+      "otp": "322267"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 59,
+      "otp": "322267"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 60,
+      "otp": "826399"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 61,
+      "otp": "826399"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 1234567890,
+      "otp": "090088"
+    },
+    {
+      "case": 2,
+      "secret": "DVS6L2CWYA3W7P4ADK7BIEPJ3RUCHPH5",
+      "timestamp": 2000000000,
+      "otp": "120509"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 29,
+      "otp": "419382"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 30,
+      "otp": "157466"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 31,
+      "otp": "157466"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 59,
+      "otp": "157466"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 60,
+      "otp": "572048"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 61,
+      "otp": "572048"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 1234567890,
+      "otp": "500525"
+    },
+    {
+      "case": 3,
+      "secret": "BJPZKQO7L7WJRVGY7YGSIMEOY4BOK54A",
+      "timestamp": 2000000000,
+      "otp": "649527"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 29,
+      "otp": "602605"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 30,
+      "otp": "803491"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 31,
+      "otp": "803491"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 59,
+      "otp": "803491"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 60,
+      "otp": "208200"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 61,
+      "otp": "208200"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 1234567890,
+      "otp": "923879"
+    },
+    {
+      "case": 4,
+      "secret": "W4ZFX2LGGDDLSPYEBMSL7HIBP5LWMCSA",
+      "timestamp": 2000000000,
+      "otp": "197278"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 29,
+      "otp": "629146"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 30,
+      "otp": "118314"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 31,
+      "otp": "118314"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 59,
+      "otp": "118314"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 60,
+      "otp": "880361"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 61,
+      "otp": "880361"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 1234567890,
+      "otp": "435451"
+    },
+    {
+      "case": 5,
+      "secret": "HD7RUDZN2E5NK6LCUE7O4WZPLUIEYN7V",
+      "timestamp": 2000000000,
+      "otp": "531301"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 29,
+      "otp": "931262"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 30,
+      "otp": "621842"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 31,
+      "otp": "621842"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 59,
+      "otp": "621842"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 60,
+      "otp": "494782"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 61,
+      "otp": "494782"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 1234567890,
+      "otp": "994092"
+    },
+    {
+      "case": 6,
+      "secret": "7PKJ3D5PDNJGXE3JW44UCL36WNTQ2CN5",
+      "timestamp": 2000000000,
+      "otp": "806158"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 29,
+      "otp": "930247"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 30,
+      "otp": "137453"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 31,
+      "otp": "137453"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 59,
+      "otp": "137453"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 60,
+      "otp": "857315"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 61,
+      "otp": "857315"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 1234567890,
+      "otp": "270212"
+    },
+    {
+      "case": 7,
+      "secret": "PVGVUNKJ36A4BEZGNYEEQBOSDG62C3ZC",
+      "timestamp": 2000000000,
+      "otp": "207904"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 29,
+      "otp": "124893"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 30,
+      "otp": "692848"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 31,
+      "otp": "692848"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 59,
+      "otp": "692848"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 60,
+      "otp": "615811"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 61,
+      "otp": "615811"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 1234567890,
+      "otp": "306225"
+    },
+    {
+      "case": 8,
+      "secret": "RRDO4S545BROG2CGPQZRCRG4SEHYT22D",
+      "timestamp": 2000000000,
+      "otp": "474294"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 29,
+      "otp": "978992"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 30,
+      "otp": "046554"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 31,
+      "otp": "046554"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 59,
+      "otp": "046554"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 60,
+      "otp": "609225"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 61,
+      "otp": "609225"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 1234567890,
+      "otp": "848603"
+    },
+    {
+      "case": 9,
+      "secret": "TXJPT5NNSDF3IUHALBJXQ7GJEB4PYUAE",
+      "timestamp": 2000000000,
+      "otp": "703383"
+    }
+  ]
+}

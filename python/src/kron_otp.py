@@ -6,6 +6,7 @@ import base64
 import binascii
 import hashlib
 import re
+import time
 
 import pyotp
 
@@ -87,6 +88,20 @@ class KronOTP:
             return False
 
         try:
-            return bool(KronOTP._totp(secret).verify(token, valid_window=1))
+            totp = KronOTP._totp(secret)
+            now = time.time()
+
+            # Unix counter zero has no -1 predecessor. In PyOTP's +/-1
+            # loop a negative counter otherwise raises before checking 0.
+            if 0 <= now < totp.interval:
+                return bool(
+                    totp.verify(token, for_time=now, valid_window=0)
+                    or totp.verify(
+                        token, for_time=now + totp.interval, valid_window=0
+                    )
+                )
+
+            # The regular +/-1 window and existing API remain unchanged.
+            return bool(totp.verify(token, for_time=now, valid_window=1))
         except (TypeError, ValueError, binascii.Error):
             return False

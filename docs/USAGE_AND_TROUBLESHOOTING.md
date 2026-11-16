@@ -1,6 +1,6 @@
-# Usage Guide & Troubleshooting — Development `main` P01
+# Usage Guide & Troubleshooting — Development `main` P01 + P02
 
-**Important:** The published npm and PyPI packages `1.0.0` have not been republished; this page documents P01 behavior in `main`, not yet available through a new registry release.
+**Important:** The published npm and PyPI packages `1.0.0` have not been republished; this page documents P01/P02 behavior in `main`, not yet available through a new registry release.
 
 ## What kind of product is this?
 
@@ -78,5 +78,9 @@ Do not embed real secrets in screenshots, CI logs, code, tracked Markdown or err
 
 - The source on `main` changes JavaScript `verify(badSecret, token)` from a thrown `TypeError` to a nonmatch (`false`). Avoid relying on the old exception path when integrating a future release.
 - Both engines reject short (<14 decoded bytes), oversized and non-ASCII-whitespace-containing secrets. 14–19 decoded-byte keys remain accepted for compatibility with existing PyOTP deployments; use random >=20 bytes for new provisioning.
-- Input bounds: 4096 raw characters; 1024 compact Base32 characters including legal `=` padding. Normal SHA-1/6-digit/30-second verification is unchanged; Python epoch-start bug is not fixed until P02.
+- Input bounds: 4096 raw characters; 1024 compact Base32 characters including legal `=` padding. Normal SHA-1/6-digit/30-second verification is unchanged; P02 fixes Python's synthetic Unix-epoch 0–29s counter underflow by excluding negative drift counters while keeping normal ±1 semantics.
 - The current public `1.0.0` registry packages are unchanged; do not claim P01 is already published.
+
+## P02 clock-boundary clarification
+
+When a deterministic test freezes the clock to Unix epoch seconds 0–29, the Python source on development `main` now verifies valid current and next-step TOTP values without raising on negative timecode −1. At normal timestamps, the existing ±one-step verification tolerance is unchanged. A real application's system clock should still be synchronized. The previously published `1.0.0` packages are unchanged; these P02 fixes are not yet published.

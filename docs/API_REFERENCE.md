@@ -1,6 +1,6 @@
-# KronOTP API Reference — Development `main` (P01)
+# KronOTP API Reference — Development `main` (P01 + P02)
 
-**Version boundary:** This page describes source on `main` after Phase P01. The previously published npm/PyPI `1.0.0` artifacts are unchanged, and their earlier invalid-secret behavior can differ. Do not assume `npm install kron-otp@1.0.0` contains P01 fixes.
+**Version boundary:** This page describes source on `main` after Phases P01–P02. The previously published npm/PyPI `1.0.0` artifacts are unchanged, and their earlier invalid-secret behavior can differ. Do not assume `npm install kron-otp@1.0.0` contains P01 fixes.
 
 This lists **all existing public API methods** of the current `KronOTP` class in each language. There are no instance settings, public constructor, asynchronous requests, stored accounts or extra features.
 
@@ -67,7 +67,7 @@ accepted: bool = KronOTP.verify(secret, token)
 
 ### `KronOTP.verify(secret: str, token: str) -> bool`
 
-- Returns `True` for a matching six-digit token within `valid_window=1`.
+- Returns `True` for a matching six-digit token in the existing current/adjacent 30-second time steps. At Unix epoch seconds 0–29, explicitly checks valid counters 0 and +1 without evaluating negative counter −1; otherwise uses PyOTP `valid_window=1`.
 - Returns `False` for mismatched token, wrong token format, invalid or too-short secret.
 - It checks token format first, then builds the generator. It returns `False` for expected invalid-secret input, as now does JavaScript on `main`.
 
@@ -83,10 +83,14 @@ accepted: bool = KronOTP.verify(secret, token)
 | Custom digits, algorithm, time-step | Not exposed | Not exposed |
 | Single-use OTP tracking | Not implemented | Not implemented |
 
-**P01 migration:** Choose randomly generated >=160-bit keys for newly provisioned accounts, although the implementation minimum remains 112 bits for compatibility with existing Python keys. Consumers who depended on short JS keys, JS verify exceptions or broad Unicode whitespace acceptance must adapt before a future release. Python epoch-start verification bug remains scheduled for P02; it is not fixed by P01.
+**P01 migration:** Choose randomly generated >=160-bit keys for newly provisioned accounts, although the implementation minimum remains 112 bits for compatibility with existing Python keys. Consumers who depended on short JS keys, JS verify exceptions or broad Unicode whitespace acceptance must adapt before a future release. Python epoch-start verification was addressed in development `main` by P02; published PyPI `1.0.0` remains unchanged.
 
 ## Integration responsibility
 
 The library's `verify()` is a local cryptographic comparison. It does not authenticate a user identity or enforce rate limiting, login sessions, OTP replay prevention, account locks or token attempt counters. Those protections belong to the application/server implementing the login flow.
 
 See [Installation](./INSTALLATION.md), [Usage & troubleshooting](./USAGE_AND_TROUBLESHOOTING.md) and [Automation](./AUTOMATION_AND_PUBLISHING.md).
+
+### P02 deterministic verification evidence
+
+The source suites now share six fixed-time RFC 6238 SHA-1 six-digit expected OTPs and 80 synthetic 160-bit Base32 secret/timestamp/OTP triples. Both engines must generate the same expected values and verify them at matching fixed timestamps. Python additionally guards negative drift counters at Unix epoch time 0–29. These are source regression tests, not a public timestamp parameter or change to 30-second/±1 configuration.
