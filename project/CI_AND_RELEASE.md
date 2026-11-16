@@ -1,8 +1,8 @@
 # CI, Packages and Release Pipeline — Technical Map
 
 ## Dependency and distribution setup
-- Node package `kron-otp@1.0.0`: CommonJS, `javascript/package.json`, `otpauth ^9.6.0`, locked `javascript/package-lock.json`, publishes `src/kron-otp.js`, README, LICENSE, manifest.
-- Python distribution `kron-otp==1.0.0`: `python/pyproject.toml`, setuptools, `py-modules=["kron_otp"]` under `python/src`, `pyotp>=2.12,<3`; generated wheel and sdist.
+- Node package `kron-otp@2.0.0` (v1.0.0 remains historical): CommonJS, `javascript/package.json`, `otpauth ^9.6.0`, locked `javascript/package-lock.json`, publishes `src/kron-otp.js`, README, LICENSE, manifest.
+- Python distribution `kron-otp==2.0.0` (v1.0.0 remains historical): `python/pyproject.toml`, setuptools, `py-modules=["kron_otp"]` under `python/src`, `pyotp>=2.12,<3`; generated wheel and sdist.
 - GitHub: `vibtoolshq/KronOTP`. Initial release tag `v1.0.0` points to commit `e77155eefd7d18d49fcde489b510f4fd8df5d797`.
 - Current docs-phase baseline is later; **do not move/reuse historical tags**.
 
@@ -65,3 +65,11 @@ The source CI workflow now runs on **every pull request** so a stable status exi
 - **P03 governance deferred, not CLOSED** by explicit owner instruction. GitHub main/tag restrictions are still absent/not verified (`main protected:false`, rulesets `[]` at prior audit); P04 minimum runtimes, independent Python CVEs, app E2E and long-run performance were not tested, and do not become PASS upon release.
 - The existing validated tag-push-only workflow performs npm and PyPI publishing from a new tagged main HEAD; separate jobs can partially succeed. Confirm each registry independently and avoid tag/registry overwrite. No `NPM_TOKEN` or `PYPI_API_TOKEN` secret values exposed.
 - Release status and actual CI run IDs must be recorded **after** execution, not assumed from documentation.
+
+## v2.0.0 publication confirmation — 2026-11-16
+
+- Annotated tag `v2.0.0` points at release commit `eefafd9934a44243879068d9b8081005e68aeade`, both manifests and npm lockfile root version `2.0.0`.
+- GitHub [release workflow 43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691): validation **SUCCESS**, Publish npm **SUCCESS**, Publish PyPI **SUCCESS**; PyPI uploaded both wheel and sdist, npm published public tarball.
+- Source-independent download/clean install tests (Windows): npm `kron-otp-2.0.0.tgz` in temporary consumer **PASS**, Python `kron_otp-2.0.0-py3-none-any.whl` from official index in new venv **PASS**. Verified version/OTP generation/validation/input guardrails, plus Python epoch-29 case.
+- The dedicated *GitHub Actions* version-aware `registry-smoke.yml` was **not dispatched for 2.0.0** in this release; independent clean registry consumer tests were run instead. Do not claim that a 2.0.0 registry-smoke workflow run exists.
+- **Explicit one-time process exception:** GitHub main and v* tag protection absent/unverified and P04 cross-platform/security/stability acceptance incomplete. KO-007 and P04 are still open; historical v1.0.0 unmodified. No GitHub Release page (release object) was created by the existing workflow; tag and npm/PyPI packages were created successfully.

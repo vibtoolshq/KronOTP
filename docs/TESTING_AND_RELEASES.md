@@ -108,3 +108,11 @@ For main branch protection, choose the **Required CI** status from the `KronOTP 
 ## v2.0.0 expedited release boundary (2026-11-16)
 
 The owner explicitly authorized publication before the P03 GitHub branch/tag ruleset hardening and P04 production/OS/security acceptance matrix. That is a **recorded process exception**, not closure of KO-007 or completion of P04. The published v1.0.0 artifact remains immutable. This release candidate's manifest and tag versions must both be **2.0.0**, validated by Actions before registry upload. Source CI and the tag-release workflow test both engines; check npm and PyPI upload jobs and separately verify public v2.0.0 download/install. Passing prior v1.0.0 registry smoke is not evidence that v2.0.0 reached registries.
+
+## v2.0.0 actual release evidence (2026-11-16)
+
+- Tagged source [v2.0.0](https://github.com/vibtoolshq/KronOTP/tree/v2.0.0) built and published by [KronOTP Release Actions run 43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691): validate, npm publish, PyPI publish **SUCCESS**.
+- Public npm `kron-otp@2.0.0`: download `kron-otp-2.0.0.tgz`, isolated temporary Node consumer install, verify installed version, six-digit generate/verify, invalid secret nonmatch and weak-key rejection **PASS**.
+- Public PyPI `kron-otp==2.0.0`: official PyPI wheel `kron_otp-2.0.0-py3-none-any.whl` downloaded, installed in fresh Python venv with dependency, version/method/weak-key/Unix-epoch regression checks **PASS**. Default local pip index initially lacked 2.0.0 while the official `https://pypi.org/simple` worked; pin the official index or refresh a stale mirror if necessary.
+- These consumer checks ran outside GitHub Actions; the separately version-aware registry-smoke workflow was not manually dispatched for v2.0.0. Do not claim that run exists.
+- v2.0.0 changes JS invalid-secret verify to boolean `false`, both engines enforce >=14 decoded secret bytes and input caps, Python epoch boundary fix. This is a **major compatibility change** from historical 1.0.0. GitHub main/tag protection and P04 long-duration/OS/security tests remain **deferred**, not PASS.

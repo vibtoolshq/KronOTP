@@ -78,3 +78,7 @@ Conditional CI without an always-present PR check could block docs-only PRs when
 ## v2.0.0 release exception (risk not eliminated)
 
 The owner directed an expedited major-version release with GitHub main/`v*` tag rulesets deferred and P04 production assurance still not executed. The missing GitHub governance controls KO-007 remain open; passing engine tests, registry smoke and tag validation do not establish end-to-end supply-chain security, independent CVE absence, OS/minimum-runtime support or relying-party replay/throttle protections. This exception must not be presented as a security certification.
+
+### v2.0.0 independently verified distribution snapshot
+
+Release [43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691) passed both publishing jobs. Exact npm and PyPI 2.0.0 public artifacts were clean-installed and tested with public fixture keys (including reject-short-keys and Python epoch 29s); **PASS** in the tested Windows environment. No new v2 GitHub registry-smoke workflow run was made. Main/tag protections and P04 environment/load/CVE qualification remain open; do not convert release success to full security certification.
