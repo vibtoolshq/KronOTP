@@ -1,0 +1,81 @@
+name: KronOTP CI
+
+on:
+  push:
+    paths:
+      - 'javascript/**'
+      - 'python/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'javascript/**'
+      - 'python/**'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changed modules
+    runs-on: ubuntu-latest
+    outputs:
+      javascript: ${{ steps.filter.outputs.javascript }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Filter changed files
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            javascript:
+              - 'javascript/**'
+              - '.github/workflows/ci.yml'
+            python:
+              - 'python/**'
+              - '.github/workflows/ci.yml'
+
+  javascript:
+    name: JavaScript tests
+    needs: changes
+    if: needs.changes.outputs.javascript == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: javascript
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Test TOTP engine
+        run: node tests/test.js
+
+  python:
+    name: Python tests
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install 'pyotp>=2.10,<3'
+      - name: Test TOTP engine
+        env:
+          PYTHONPATH: .
+        run: python tests/test_kron_otp.py
