@@ -153,3 +153,9 @@ python -m unittest discover -s python/tests/gui -p test_app.py -v
 ```
 
 These GUI tests are **not automatically executed by the existing Linux GitHub Python CI job**; run on Windows with Tkinter/DPAPI. Published PyPI KronOTP verifies that the source app actually uses the installed engine. GUI-02 test results and CI evidence are recorded in `project/DEVELOPMENT_LOG.md` only after verification. A local app is not full production/security certification; cryptographic at-rest protection applies to Windows vault only and cannot defend against a compromised logged-in Windows user. Preserve external account recovery codes.
+
+### GUI-02 verification results (2026-11-16)
+- On Windows Python 3.12, against the **installed official PyPI `kron-otp==2.0.0`**, the focused GUI/DPAPI suite `python -m unittest discover -s python/tests/gui -p test_app.py -v` finished **8/8 PASS** (exit 0), with no Tk callback shutdown warnings after targeted correction. No actual user secrets were used.
+- Tested: URI (supported/rejected algorithms, dimensions and malformed inputs), Windows DPAPI encrypted vault read/write/tamper, multi-account + temporary usage, search/edit/delete, clipboard conditional clear, OTP rollover, privacy lock/idle lock, Tk clean close. The test does not prove remote account login.
+- [GitHub CI run 43906779325](https://github.com/vibtoolshq/KronOTP/actions/runs/43906779325): Python engine tests and Required CI SUCCESS, JS SKIPPED as intended. Existing Linux CI does **not** execute the Windows-only Tk/DPAPI integration suite.
+- GUI-02 is still distributed through GitHub source, not PyPI wheel or Windows EXE; no new tag or package publication. User's Windows account and separate recovery backups remain essential. Do not treat local GUI testing as an independent security penetration test.
