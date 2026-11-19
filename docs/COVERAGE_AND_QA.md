@@ -5,6 +5,14 @@ order: 130
 draft: false
 ---
 
+## Current logo verification — BRAND-01 (2026-11-20)
+
+- **Current status: logo configured and verified.** The previous checklist snapshot below recorded logo N/A *before* BRAND-01; that historical result is now superseded.
+- `.vibtools/docs.config.json` explicitly sets its supported root `logoPath` to `.vibtools/logo.webp`; all other frozen schema fields and developer-only routing remain unchanged.
+- [`logo.webp`](https://github.com/vibtoolshq/KronOTP/blob/main/.vibtools/logo.webp) is a 96 × 96 transparent WebP (4,772 bytes) derived from the generated blue K/stopwatch/security/OTP icon. Local SHA-256 `70b3260851df1c60f2366a8481ed0adebaccd714e04569bbdae5bb16bb18d19e`, GitHub Git blob SHA `914d4af8ca42c25f11c100ddd2ba4ceee0b745b8`, both byte-identical to the prepared source derivative.
+- **Current logo checklist: PASS** — WebP RIFF/VP8X alpha flag, safe existing repo-relative logoPath, matching blob, and both official developer/users JSON Schema Draft 2020-12 validations. The root README image link exists.
+- **External boundary:** A live `developer.vibtools.io` ingest/build is not verified; this repository's logo/config validation is not evidence of portal publication.
+
 **Audit date:** 2026-11-19. **Input baseline:** `7aaeb9703b42d4ea1d2c3b83233eb74be35707ce`. Primary evidence: tracked source tree, package metadata and lockfile, runtime source, source and GUI tests, workflow YAML, existing docs and repository instructions. **Documentation-only scope:** `docs/` plus required `project/` technical map/log; no runtime/test/workflow/package changes.
 
 ## Audited implementation inventory
