@@ -31,7 +31,8 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `.github/workflows/release.yml` | P03 secure tag-push-only publisher gating, current-main-head tag check, least-privileged token permissions, SHA-pinned action versions |
 | `.github/workflows/registry-smoke.yml` | P03 strict SemVer target resolver, dynamic npm/PyPI download, install and exact-version verification; manual input and manifest-derived push default |
 | `docs/AUTOMATION_AND_PUBLISHING.md` | Public Playwright/Puppeteer/Selenium integration examples and publishing steps |
-| `.vibtools/docs.config.json` | Frozen Vib Docs Engine schema v1 configuration; `docsType: developer`, `docsPath: docs` and current v2.0.0 metadata |
+| `.vibtools/logo.webp` | BRAND-01 transparent, 96 × 96 optimized derivative of approved KronOTP blue K/timer/security icon; root README and Vib Docs Engine branding asset |
+| `.vibtools/docs.config.json` | Frozen Vib Docs Engine schema v1 configuration; `docsType: developer`, `docsPath: docs`, explicit valid `logoPath: .vibtools/logo.webp`, and v2.0.0 metadata |
 | `docs/MANIFEST.md` | Canonical Vib Docs Engine source inventory (15 entries); automatically excluded from portal builds |
 | `docs/index.md` | Complete developer-docs homepage and structured navigation |
 | `docs/QUICKSTART.md` | Executable, synthetic-secret Node/Python 2.0.0 quickstart |

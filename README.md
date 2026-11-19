@@ -1,5 +1,7 @@
 # KronOTP
 
+![KronOTP project logo](./.vibtools/logo.webp)
+
 **KronOTP** is a small, open-source monorepo containing independent Node.js and Python TOTP generators/verifiers for authorized two-factor authentication integrations and automation.
 
 | Module | Install | Import | Status |
