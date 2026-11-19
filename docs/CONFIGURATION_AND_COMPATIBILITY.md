@@ -1,4 +1,9 @@
-# Configuration, Dependencies and Compatibility
+---
+title: "Configuration, Dependencies and Compatibility"
+description: "Actual fixed TOTP settings, supported runtimes, package dependencies and v1 to v2 migration guidance."
+order: 50
+draft: false
+---
 
 ## Engine configuration: fixed, not user-settable
 

@@ -1,4 +1,9 @@
-# Usage and Troubleshooting — KronOTP v2.0.0
+---
+title: "Usage and Troubleshooting — KronOTP v2.0.0"
+description: "Practical TOTP usage, input and clock errors, version migration and source-only GUI limitations."
+order: 70
+draft: false
+---
 
 KronOTP's **published packages** are synchronous TOTP libraries; they have **no bundled application UI, CLI or server**. The **GitHub source repository**, separately, includes an optional Tkinter Authenticator application with account management. Distinguish the public library contract from example-app functionality.
 
@@ -47,7 +52,7 @@ These fixed keys are for documentation/tests **only**, never real account creden
 
 ## Source-only Authenticator app
 
-[GUI guide](../python/tests/gui/README.md) describes the source-only Tkinter app: multi-account list/search/add/edit/delete, compatible `otpauth://totp` paste, temporary unsaved key, live code, 30-second countdown, OTP copy, local check and Windows DPAPI opt-in encrypted saved accounts. It is not bundled in PyPI. Windows app Lock is not a separate password barrier, DPAPI files are not portable backups, and the clipboard may expose copied OTPs briefly.
+[GUI guide](https://github.com/vibtoolshq/KronOTP/blob/main/python/tests/gui/README.md) describes the source-only Tkinter app: multi-account list/search/add/edit/delete, compatible `otpauth://totp` paste, temporary unsaved key, live code, 30-second countdown, OTP copy, local check and Windows DPAPI opt-in encrypted saved accounts. It is not bundled in PyPI. Windows app Lock is not a separate password barrier, DPAPI files are not portable backups, and the clipboard may expose copied OTPs briefly.
 
 ## Security and compatibility
 

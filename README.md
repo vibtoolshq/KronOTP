@@ -59,7 +59,7 @@ KronOTP/
 │       ├── vault.py           # Windows DPAPI current-user encrypted account store
 │       ├── test_app.py        # GUI and vault integration checks (Windows)
 │       └── README.md
-├── docs/                    # Public user documentation and MINIFEST
+├── docs/                    # Developer portal docs (index.md + MANIFEST.md)
 ├── project/                 # Developer technical maps, history, MINIFEST
 ├── AGENTS.md                # Pre-change documentation and privacy rules
 ├── AI_INSTRUCTIONS.md
@@ -69,7 +69,7 @@ KronOTP/
 
 ## Documentation & development records
 
-- **User guide**: [docs/README.md](./docs/README.md) — installation, complete public API, safe usage, troubleshooting, automation and release guidance.
+- **Developer documentation**: [docs/index.md](./docs/index.md) — installation, complete public API, safe usage, troubleshooting, automation and release guidance.
 - **Maintainer reference**: [project/README.md](./project/README.md) — architecture, full file/function maps, dependency reasoning, CI internals, known gaps and phase log.
 - **Repository agent rules**: [AGENTS.md](./AGENTS.md) and [AI_INSTRUCTIONS.md](./AI_INSTRUCTIONS.md).
 - **Private local-only notes**: `notes/` is deliberately ignored by Git and never published. Its `README.md` and `MINIFEST.md` remain only on an authorized developer's machine.

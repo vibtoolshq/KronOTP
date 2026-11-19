@@ -19,4 +19,4 @@ This directory is the **Git-tracked development knowledge base** for KronOTP, no
 ## Reading order
 [Architecture](./ARCHITECTURE.md) → [File map](./FILE_MAP.md) → [Function reference](./FUNCTION_REFERENCE.md) → [CI/release](./CI_AND_RELEASE.md) → [Quality & gaps](./QUALITY_AND_SECURITY.md) → [Development history](./DEVELOPMENT_LOG.md).
 
-User instructions live in [`docs/`](../docs/README.md). Project-wide rules live in [`AGENTS.md`](../AGENTS.md) and [`AI_INSTRUCTIONS.md`](../AI_INSTRUCTIONS.md).
+User instructions live in [`docs/`](../docs/index.md). Project-wide rules live in [`AGENTS.md`](../AGENTS.md) and [`AI_INSTRUCTIONS.md`](../AI_INSTRUCTIONS.md).

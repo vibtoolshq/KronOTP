@@ -1,4 +1,10 @@
-# KronOTP Developer Documentation
+---
+title: "KronOTP Developer Documentation"
+description: "KronOTP developer documentation for the Node.js and Python TOTP libraries, API reference, installation, integrations, architecture and security boundaries."
+version: "2.0.0"
+order: 0
+draft: false
+---
 
 **Current distribution:** npm `kron-otp@2.0.0` (CommonJS) and PyPI `kron-otp==2.0.0` (`kron_otp` import). **Source baseline audited:** `7aaeb9703b42d4ea1d2c3b83233eb74be35707ce`, 2026-11-19.
 
@@ -22,7 +28,7 @@ KronOTP exposes **two operations in two languages**: generate a six-digit time-b
 | Concise answers and supported limits | [FAQ](./FAQ.md) |
 | Forensic inventory, public API coverage and evidence | [Coverage & QA report](./COVERAGE_AND_QA.md) |
 
-For a flat list of all documents, see [MINIFEST](./MINIFEST.md) (repository-mandated spelling), or its [MANIFEST alias](./MANIFEST.md). The [docs README](./README.md) explains the public/developer boundary; `project/` holds maintainer technical maps and private local `notes/` is never committed.
+Repository inventory is maintained in `docs/MANIFEST.md` (excluded from Vib Docs Engine publishing). The [documentation home](./index.md) is authoritative; `project/` contains maintainer technical maps and private local `notes/` remains outside Git.
 
 ## Version and responsibility boundary
 

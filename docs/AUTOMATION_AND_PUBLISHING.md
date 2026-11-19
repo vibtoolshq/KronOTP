@@ -1,4 +1,9 @@
-# KronOTP — Automation Integration & Publishing Guide
+---
+title: "KronOTP — Automation Integration & Publishing Guide"
+description: "Optional consumer browser automation patterns and authorized npm and PyPI publishing workflows."
+order: 80
+draft: false
+---
 
 > **Scope:** Authorized testing and integration only. Automated publishing is configured in `.github/workflows/release.yml`: stable `vX.Y.Z` tag pushes validate both packages and then publish to npm and PyPI. The manual commands below are alternatives for maintainers. No packages have been published by adding this workflow.
 >
@@ -194,7 +199,7 @@ Publishing commands below are **manual alternatives**. The release workflow uses
 
 ### 2.2 Automated tag releases
 
-The file [`.github/workflows/release.yml`](../.github/workflows/release.yml) is triggered by `vMAJOR.MINOR.PATCH` tags. Validation checks that both package versions match the tag, the tagged commit is on `main`, tests pass, and the npm and Python distribution contents build successfully. The npm and PyPI publishing jobs run only after validation.
+The file [`.github/workflows/release.yml`](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/release.yml) is triggered by `vMAJOR.MINOR.PATCH` tags. Validation checks that both package versions match the tag, the tagged commit is on `main`, tests pass, and the npm and Python distribution contents build successfully. The npm and PyPI publishing jobs run only after validation.
 
 GitHub organization Actions secrets (available to this public repository): `NPM_TOKEN` and `PYPI_API_TOKEN`. Confirm correct access at **GitHub organization Settings → Secrets and variables → Actions**; secret values cannot be read back. The PyPI token appeared in a shared screenshot: **revoke it, create a new appropriately scoped token, and replace the GitHub secret before tagging**.
 

@@ -1,4 +1,9 @@
-# Development, Contribution and Release Process
+---
+title: "Development, Contribution and Release Process"
+description: "Repository structure, local source tests, contribution discipline, GitHub CI and release preparation."
+order: 90
+draft: false
+---
 
 ## Checkout and directory map
 
@@ -65,9 +70,9 @@ No verified separate code-style formatter, linter, coverage threshold, contribut
 
 ## CI workflows
 
-- [KronOTP CI](../.github/workflows/ci.yml) runs on all pull requests (with selective JS/Python tests) and on main pushes changing language directories/workflows; stable `Required CI` aggregates relevant jobs. A docs-only main push **does not trigger this CI workflow**.
-- [Release workflow](../.github/workflows/release.yml) validates both packages on the configured push paths and manual dispatch. **Publishing** requires an actual pushed stable `vMAJOR.MINOR.PATCH` tag whose commit is the current main HEAD and matches both package versions.
-- [Published package smoke](../.github/workflows/registry-smoke.yml) accepts a stable numeric version on manual dispatch or resolves equal package manifest versions on a workflow-file push. It downloads/install-checks exact npm and PyPI artifacts without publishing.
+- [KronOTP CI](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/ci.yml) runs on all pull requests (with selective JS/Python tests) and on main pushes changing language directories/workflows; stable `Required CI` aggregates relevant jobs. A docs-only main push **does not trigger this CI workflow**.
+- [Release workflow](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/release.yml) validates both packages on the configured push paths and manual dispatch. **Publishing** requires an actual pushed stable `vMAJOR.MINOR.PATCH` tag whose commit is the current main HEAD and matches both package versions.
+- [Published package smoke](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/registry-smoke.yml) accepts a stable numeric version on manual dispatch or resolves equal package manifest versions on a workflow-file push. It downloads/install-checks exact npm and PyPI artifacts without publishing.
 
 GitHub `Required CI` is a produced check, **not proof that branch protection is active**. At the audited baseline, main/tag ruleset enforcement remains an outstanding governance item.
 

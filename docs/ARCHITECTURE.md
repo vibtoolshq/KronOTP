@@ -1,4 +1,9 @@
-# Architecture and Execution Flow
+---
+title: "Architecture and Execution Flow"
+description: "KronOTP source modules, TOTP data flow, the optional Tkinter application, DPAPI vault and CI architecture."
+order: 40
+draft: false
+---
 
 ## Distribution and source boundaries
 
@@ -59,4 +64,4 @@ Windows DPAPI security relies on the signed-in Windows user; it is not a master-
 - `.github/workflows/release.yml` validates both packages and publishes npm/PyPI only for an authorized pushed version tag matching the current main HEAD. Registry uploads are separate, not atomic.
 - `.github/workflows/registry-smoke.yml` checks an explicitly selected stable registry version or matching manifest versions on workflow-file push.
 
-See [developer setup and release](./DEVELOPMENT_AND_CONTRIBUTING.md), [testing evidence](./TESTING_AND_RELEASES.md), and [repository file map](../project/FILE_MAP.md).
+See [developer setup and release](./DEVELOPMENT_AND_CONTRIBUTING.md), [testing evidence](./TESTING_AND_RELEASES.md), and [repository file map](https://github.com/vibtoolshq/KronOTP/blob/main/project/FILE_MAP.md).

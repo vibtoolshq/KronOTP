@@ -1,4 +1,9 @@
-# Developer FAQ
+---
+title: "Developer FAQ"
+description: "Developer FAQ about the KronOTP public API, version 2.0.0 limitations and the optional Authenticator application."
+order: 120
+draft: false
+---
 
 ### What is the public API?
 The npm and PyPI packages each publish a `KronOTP` class with two **static** methods: `generate(secret)` and `verify(secret, token)`. Both are synchronous. There are no public options, constructors with parameters, hooks, events, async clients or CLI commands. [Full reference](./API_REFERENCE.md).

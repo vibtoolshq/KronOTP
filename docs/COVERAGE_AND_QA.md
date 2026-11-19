@@ -1,4 +1,9 @@
-# Forensic Documentation Coverage and QA
+---
+title: "Forensic Documentation Coverage and QA"
+description: "Implementation audit and documentation coverage evidence for public APIs, tests, integrations and security limitations."
+order: 130
+draft: false
+---
 
 **Audit date:** 2026-11-19. **Input baseline:** `7aaeb9703b42d4ea1d2c3b83233eb74be35707ce`. Primary evidence: tracked source tree, package metadata and lockfile, runtime source, source and GUI tests, workflow YAML, existing docs and repository instructions. **Documentation-only scope:** `docs/` plus required `project/` technical map/log; no runtime/test/workflow/package changes.
 
@@ -20,12 +25,12 @@
 | Base32 bounds, errors, time tolerance, v1→v2 | [API](./API_REFERENCE.md), [Compatibility](./CONFIGURATION_AND_COMPATIBILITY.md) | Covered |
 | JS/Python metadata and lockfile | [Installation](./INSTALLATION.md), [Compatibility](./CONFIGURATION_AND_COMPATIBILITY.md) | Covered |
 | Minimal code examples and caller secret policy | [Quickstart](./QUICKSTART.md), [Integration](./INTEGRATION_GUIDE.md) | Covered |
-| GUI and DPAPI internals (not package exports) | [Architecture](./ARCHITECTURE.md), [GUI source guide](../python/tests/gui/README.md) | Covered |
+| GUI and DPAPI internals (not package exports) | [Architecture](./ARCHITECTURE.md), [GUI source guide](https://github.com/vibtoolshq/KronOTP/blob/main/python/tests/gui/README.md) | Covered |
 | JS/Python core and GUI suites + shared fixtures | [Development](./DEVELOPMENT_AND_CONTRIBUTING.md), [Testing](./TESTING_AND_RELEASES.md) | Covered |
 | Three workflows and token references | [Development](./DEVELOPMENT_AND_CONTRIBUTING.md), [Testing](./TESTING_AND_RELEASES.md) | Covered |
 | Failure handling and common issues | [Debugging](./DEBUGGING.md), [FAQ](./FAQ.md) | Covered |
 | Public integrations and optional browser tools | [Integration](./INTEGRATION_GUIDE.md), [Automation](./AUTOMATION_AND_PUBLISHING.md) | Covered |
-| Repo policies and maintainer workflow | [Development](./DEVELOPMENT_AND_CONTRIBUTING.md), [Agent rules](../AGENTS.md) | Covered |
+| Repo policies and maintainer workflow | [Development](./DEVELOPMENT_AND_CONTRIBUTING.md), [Agent rules](https://github.com/vibtoolshq/KronOTP/blob/main/AGENTS.md) | Covered |
 
 ## Executed checks and release evidence
 
@@ -45,8 +50,33 @@
 
 No external penetration test, complete multi-platform/low-runtime matrix, sustained performance benchmark, secret-memory zeroization proof, QR scanner, independent live authenticator provider integration or server replay defense validation was performed. No assertion is made about real GitHub publisher secret scope or universally enforced repository protections. The source-only Windows DPAPI app's security depends on the signed-in Windows account and separately retained recovery materials.
 
-This is **documentation verification**, not a new release or security certification. [Document index](./index.md) · [Manifest](./MINIFEST.md).
+This is **documentation verification**, not a new release or security certification. [Document index](./index.md) · repository inventory `docs/MANIFEST.md`.
 
 ## Documentation implementation provenance
 
 Initial new documentation GitHub commit: [4813faa8d9a41c8bcd631df5880bf7baee9b0687](https://github.com/vibtoolshq/KronOTP/commit/4813faa8d9a41c8bcd631df5880bf7baee9b0687). The subsequent documentation-only closeout corrects the verified tracked-file count and adds actual link/code-syntax audit results. **Documentation maintenance does not produce a new workflow run** under the repository's path-filtered main-push triggers; no release/tag or package changes were made.
+
+## Vib Docs Engine developer portal integration (2026-11-20)
+
+The repository now routes **developer documentation only** from `.vibtools/docs.config.json` with `docsType: "developer"`, `docsPath: "docs"`, and `schemaVersion: 1`. `docs/index.md` provides versioned frontmatter and the first sidebar overview; remaining published guides use unique numeric `order` frontmatter. The former `docs/README.md` duplicates the root index and is removed because the engine discards it at sync. The former typo `docs/MINIFEST.md` is removed; **only `docs/MANIFEST.md` remains** as the source repository inventory and is intentionally removed by the portal sync, so no published page links to it. Source-code references outside the configured docs tree use verified absolute GitHub URLs instead of invalid `../` links.
+
+This portal-specific change does not modify package/API behavior or claim user-portal documentation. The official live portal endpoints were not reachable from the current web environment; schema format and 10-point checklist were verified against the open-source Vib Docs Engine canonical `docs/vibtools-config.md` and `src/utils/vibtoolsConfig.ts` at commit `d88d6d57bf21e157f5bbaf767ca149ea5b48f9b5`. Passing static/structural checks does **not** certify that a remote portal sync/deployment has run. Local Windows sync and private `notes/` update also depend on restoring the currently offline Desktop Commander connection.
+
+## Vib Docs Engine 10-point self-verification (repository-stage audit, 2026-11-20)
+
+The checklist below evaluates the staged Git tree against the frozen JSON Schema embedded in the official [Vib Docs Engine configuration specification](https://github.com/vibtoolshq/vib-docs-engine/blob/d88d6d57bf21e157f5bbaf767ca149ea5b48f9b5/docs/vibtools-config.md). This is not an assertion of a live deployment.
+
+| Official checklist | Result | Evidence |
+| --- | --- | --- |
+| 1. Only canonical config | PASS | Only `.vibtools/docs.config.json`; no alias |
+| 2. Strict JSON and schema | PASS | Canonical `$schema` URL, `schemaVersion: 1`, exact property names/types |
+| 3. Correct docsType and targets | PASS | `docsType: developer`, one `docsPath: docs`, no unused targets |
+| 4. Slug and accent | PASS | `kronotp` and valid six-digit hex `#2563EB` |
+| 5. Safe relative paths | PASS | `docs` is within repository; no `logoPath` configured |
+| 6. Root index | PASS | `docs/index.md` has versioned title/description frontmatter and real body |
+| 7. Valid YAML frontmatter | PASS | All 14 published pages have title, description, numeric order and boolean `draft: false`; root version `2.0.0` |
+| 8. No stray typo manifests | PASS | Removed `docs/MINIFEST.md`; `docs/MANIFEST.md` remains as engine-stripped inventory |
+| 9. Internal links/assets | PASS | Internal Markdown links remain within `docsPath`; external source links use GitHub URLs; no local assets declared |
+| 10. Logo compliance | N/A (valid) | No logoPath/eligible logo asset; fallback monogram supported |
+
+**Limitations:** Live hosted schema/spec URLs could not be retrieved by this environment, so the authoritative open-source engine repository was used. The actual developer portal sync/build was not run or observed. The authorized Windows Desktop Commander was offline; local fast-forward pull, local ignored notes update, and final GitHub/local clean-head matching are **BLOCKED**, not PASS. This does not change the correctness of the staged config/schema audit.

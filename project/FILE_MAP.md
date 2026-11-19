@@ -31,9 +31,8 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `.github/workflows/release.yml` | P03 secure tag-push-only publisher gating, current-main-head tag check, least-privileged token permissions, SHA-pinned action versions |
 | `.github/workflows/registry-smoke.yml` | P03 strict SemVer target resolver, dynamic npm/PyPI download, install and exact-version verification; manual input and manifest-derived push default |
 | `docs/AUTOMATION_AND_PUBLISHING.md` | Public Playwright/Puppeteer/Selenium integration examples and publishing steps |
-| `docs/README.md` | Public developer docs boundary, navigation and maintenance requirements |
-| `docs/MINIFEST.md` | Canonical direct Markdown file inventory (mandatory repository spelling, currently 17 files) |
-| `docs/MANIFEST.md` | Conventional manifest spelling; compatibility link to canonical MINIFEST |
+| `.vibtools/docs.config.json` | Frozen Vib Docs Engine schema v1 configuration; `docsType: developer`, `docsPath: docs` and current v2.0.0 metadata |
+| `docs/MANIFEST.md` | Canonical Vib Docs Engine source inventory (15 entries); automatically excluded from portal builds |
 | `docs/index.md` | Complete developer-docs homepage and structured navigation |
 | `docs/QUICKSTART.md` | Executable, synthetic-secret Node/Python 2.0.0 quickstart |
 | `docs/ARCHITECTURE.md` | Source implementation data flow, real module mapping, GUI/vault boundaries and CI diagrams |
@@ -61,4 +60,4 @@ The above is a map, not a claim that engine-level APIs, pages, buttons or databa
 
 ## DEVDOCS-01 forensic documentation inventory (2026-11-19)
 
-The Git-tracked `docs/` folder now includes a **flat developer documentation suite**, not product UI implementation. `docs/index.md` is the developer entry; `docs/MINIFEST.md` is the exact canonical inventory, with `docs/MANIFEST.md` an alias for readers expecting the conventional name. Public engine interfaces remain solely the two static `KronOTP` operations per language. No application-source, package or workflow change is made by this documentation phase.
+The Git-tracked `docs/` folder now includes a **flat developer documentation suite**, not product UI implementation. `docs/index.md` is the portal root; `docs/MANIFEST.md` is the exact canonical inventory, stripped by Vib Docs Engine. The legacy `docs/MINIFEST.md` typo and duplicate root `docs/README.md` were removed to avoid orphaned portal routes. Public engine interfaces remain solely the two static `KronOTP` operations per language. No application-source, package or workflow change is made by this documentation phase.

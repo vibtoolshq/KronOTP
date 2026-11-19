@@ -25,13 +25,14 @@ These are **mandatory repository-local rules** for human and AI development agen
 6. **Update `docs/` in the same changeset** whenever public functionality, commands, installation, parameters, errors, security notes or release behavior changes. Do not invent interfaces, pages, buttons, features, results or compatibility.
 7. After the one appropriately scoped verification and Git sync, append real results to the local note and close the phase only when required checks and baseline matching succeed.
 
-## 3. README and MINIFEST rule
+## 3. Documentation zone inventories and Vib Docs Engine compatibility
 
-- Each of `notes/`, `project/`, and `docs/` **must** contain `README.md` explaining purpose, audience, rules, when to update, and boundaries.
-- Each must contain exactly named `MINIFEST.md` (user-requested spelling) listing **every direct file/subfolder**, purpose and relevant phase or function. Keep inventories synchronized whenever adding, deleting or moving an entry.
-- New subdirectories introduced *inside* these three zones must also have their own `README.md` and `MINIFEST.md`, and be listed in the parent inventory. Avoid unnecessary nested folders.
+- **Private `notes/` and tracked `project/` only** retain the established `README.md` and `MINIFEST.md` inventories. Update those inventories when entries change. New subdirectories there follow the same per-folder README/MINIFEST convention.
+- **Portal-synced `docs/` exception (Vib Docs Engine authoritative contract):** `docs/index.md` is the only root landing page and includes valid title/description/version/order frontmatter. `docs/MANIFEST.md` is the exact spelled source inventory and is deliberately stripped during portal synchronization. Do **not** create `docs/README.md` beside `docs/index.md` (the engine deletes the duplicate) or `docs/MINIFEST.md` (the engine does not strip the typo).
+- If `docs/` later gains subfolders, use an `index.md` and valid Markdown frontmatter where appropriate. Do not impose the private `MINIFEST.md` naming convention on portal-published docs folders.
+- Always keep the `docs/MANIFEST.md` source inventory exact and avoid relative public page links to stripped files or outside the configured `docsPath`.
 - In `project/`, keep an authoritative technical map showing the location and purpose of each source file, public/private method, module, dependency, workflow, and relevant integration.
-- In `docs/`, describe how every **existing** user-visible feature actually works with complete steps, parameters, examples, limitations, and troubleshooting. KronOTP currently provides library APIs, **not** an application with pages, buttons, or a web interface.
+- In `docs/`, document real public library APIs, developer integrations, configuration and limitations. The published libraries do not bundle a UI; the repository separately contains a source-only Tkinter Authenticator example and Windows DPAPI vault, not a PyPI public API.
 - Link to exact source/config paths. Treat source and verified tests as authoritative; label unverified claims as pending, not implemented.
 
 ## 4. Update-log contract
@@ -54,4 +55,4 @@ Update maps and manifests **in the same commit as related tracked changes**, not
 
 ## 6. Close-out checklist
 
-`notes/` plan exists before tracked edits; `project/` technical details and log are current; `docs/` public behavior matches code; README/MINIFEST inventories are correct; verification results are recorded; GitHub and local heads match; working tree is clean; no private files are tracked. Only then report phase closed.
+`notes/` plan exists before tracked edits; `project/` technical details and log are current; `docs/` public behavior matches code; private/maintainer README/MINIFEST and portal docs/index.md + docs/MANIFEST.md inventories are correct; verification results are recorded; GitHub and local heads match; working tree is clean; no private files are tracked. Only then report phase closed.

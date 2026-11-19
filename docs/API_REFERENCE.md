@@ -1,4 +1,9 @@
-# Public API Reference — KronOTP v2.0.0
+---
+title: "Public API Reference — KronOTP v2.0.0"
+description: "Complete Node.js and Python KronOTP generate and verify method signatures, parameters, results and errors."
+order: 30
+draft: false
+---
 
 **Complete supported public package API:** one `KronOTP` class per language, each exporting **two static methods**. No other supported public class methods, public constructor arguments, interfaces, enums, hooks, events, CLI commands, network operations or configuration setters are implemented.
 

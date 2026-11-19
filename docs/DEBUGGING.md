@@ -1,4 +1,9 @@
-# Testing, Debugging and Failure Diagnosis
+---
+title: "Testing, Debugging and Failure Diagnosis"
+description: "Debug KronOTP imports, invalid Base32 secrets, clock drift, GUI vault failures and CI checks."
+order: 110
+draft: false
+---
 
 ## First isolate package/runtime issues
 

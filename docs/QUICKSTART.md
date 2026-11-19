@@ -1,4 +1,9 @@
-# Quickstart — Node.js and Python
+---
+title: "Quickstart — Node.js and Python"
+description: "Install KronOTP 2.0.0 and execute minimal Node.js and Python TOTP generation and verification examples."
+order: 10
+draft: false
+---
 
 Install a **published v2.0.0** library in your own consumer project. Both examples use the **public RFC sample secret** only; do **not** use this fixed secret to secure a real account.
 
@@ -49,4 +54,4 @@ Python import uses **underscore** (`kron_otp`); pip distribution uses **hyphen**
 2. Generate a code immediately before use; each time step is **30 seconds**. Codes can contain leading zeros; never convert them to integers.
 3. Treat `verify` as **local comparison only**. A production server must add account binding, attempt limits, replay protection and controlled login sessions.
 
-Explore [exact API contracts](./API_REFERENCE.md), [integration patterns](./INTEGRATION_GUIDE.md), [installation and development setup](./INSTALLATION.md), or [the optional source-only GUI](../python/tests/gui/README.md).
+Explore [exact API contracts](./API_REFERENCE.md), [integration patterns](./INTEGRATION_GUIDE.md), [installation and development setup](./INSTALLATION.md), or [the optional source-only GUI](https://github.com/vibtoolshq/KronOTP/blob/main/python/tests/gui/README.md).

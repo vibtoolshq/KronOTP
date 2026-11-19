@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.vib.tools/schemas/vibtools-docs.schema.json",
+  "schemaVersion": 1,
+  "docsType": "developer",
+  "slug": "kronotp",
+  "title": "KronOTP",
+  "category": "Core Engine",
+  "description": "Node.js and Python TOTP generation and verification libraries with integration, testing and architecture guides.",
+  "version": "2.0.0",
+  "accentColor": "#2563EB",
+  "docsPath": "docs",
+  "branch": "main",
+  "ctaLabel": "GitHub",
+  "ctaUrl": "https://github.com/vibtoolshq/KronOTP"
+}

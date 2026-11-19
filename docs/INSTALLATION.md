@@ -1,4 +1,9 @@
-# Installation and Environment Requirements
+---
+title: "Installation and Environment Requirements"
+description: "Supported runtime versions, npm and PyPI installs, editable developer setup and source-only Authenticator installation."
+order: 20
+draft: false
+---
 
 ## Published packages (both v2.0.0)
 

@@ -1,4 +1,9 @@
-# Testing, CI, Published Artifacts and Releases
+---
+title: "Testing, CI, Published Artifacts and Releases"
+description: "Core and GUI test commands, GitHub Actions behavior, current published packages and release verification."
+order: 100
+draft: false
+---
 
 ## Test organization and verified commands
 
@@ -17,9 +22,9 @@ The GUI test suite is **not** invoked by the existing Linux Python CI job. Node 
 
 | Workflow | Trigger | Verified behavior |
 | --- | --- | --- |
-| [KronOTP CI](../.github/workflows/ci.yml) | Pull requests; main pushes affecting `javascript/**`, `python/**` or the workflows | Path-filtered Node 24 / Python 3.12 suites; unconditional stable `Required CI` check aggregating relevant jobs |
-| [KronOTP Release](../.github/workflows/release.yml) | Main push affecting package/workflow release files, manual dispatch, pushed `v*` tags | `validate` tests both packages, dry-runs npm payload, builds/tests PyPI distributions; npm/PyPI **publish jobs only run on a tag push** |
-| [Published Package Smoke](../.github/workflows/registry-smoke.yml) | Its workflow file push on main or manual dispatch | Strict stable numeric SemVer, exact public npm tarball/PyPI wheel download, clean consumer install and installed-version assertions |
+| [KronOTP CI](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/ci.yml) | Pull requests; main pushes affecting `javascript/**`, `python/**` or the workflows | Path-filtered Node 24 / Python 3.12 suites; unconditional stable `Required CI` check aggregating relevant jobs |
+| [KronOTP Release](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/release.yml) | Main push affecting package/workflow release files, manual dispatch, pushed `v*` tags | `validate` tests both packages, dry-runs npm payload, builds/tests PyPI distributions; npm/PyPI **publish jobs only run on a tag push** |
+| [Published Package Smoke](https://github.com/vibtoolshq/KronOTP/blob/main/.github/workflows/registry-smoke.yml) | Its workflow file push on main or manual dispatch | Strict stable numeric SemVer, exact public npm tarball/PyPI wheel download, clean consumer install and installed-version assertions |
 
 A **docs-only push on main does not automatically trigger the CI or release workflows** under their configured `push.paths`; do not report an absent run as a failure or fake a PASS. Pull requests trigger the `Required CI` producer, but GitHub branch protection enforcement is a separate repository setting.
 

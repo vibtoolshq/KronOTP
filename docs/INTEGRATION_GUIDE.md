@@ -1,4 +1,9 @@
-# Integration Engineering
+---
+title: "Integration Engineering"
+description: "Integrate the synchronous KronOTP API into authorized applications while implementing account binding and replay protection."
+order: 60
+draft: false
+---
 
 ## Design principles
 
@@ -50,7 +55,7 @@ The existing [automation guide](./AUTOMATION_AND_PUBLISHING.md) includes consume
 
 ## Optional source-only desktop integration
 
-The [Tkinter Authenticator source app](../python/tests/gui/README.md) consumes **installed PyPI 2.0.0**, adds account selection, supported `otpauth://totp` parsing, live codes, clipboard tools and optional **Windows CurrentUser DPAPI-encrypted** saved accounts. The GUI lives under `python/tests/gui/`; `pip install kron-otp` does **not** install it. GUI methods and vault types are implementation details of this example, **not supported public APIs** of the Python package.
+The [Tkinter Authenticator source app](https://github.com/vibtoolshq/KronOTP/blob/main/python/tests/gui/README.md) consumes **installed PyPI 2.0.0**, adds account selection, supported `otpauth://totp` parsing, live codes, clipboard tools and optional **Windows CurrentUser DPAPI-encrypted** saved accounts. The GUI lives under `python/tests/gui/`; `pip install kron-otp` does **not** install it. GUI methods and vault types are implementation details of this example, **not supported public APIs** of the Python package.
 
 Only SHA1/6 digits/30 seconds are accepted by the GUI importer, matching the engine. HOTP, 8-digit TOTP, SHA256/SHA512, variable periods and QR image capture are not implemented.
 
