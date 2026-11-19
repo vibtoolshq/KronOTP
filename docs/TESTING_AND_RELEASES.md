@@ -1,161 +1,46 @@
-# Testing, Published Packages & Releases
+# Testing, CI, Published Artifacts and Releases
 
-This guide documents **verified existing** test and release workflows, not a promise of new functionality.
+## Test organization and verified commands
 
-## Run tests locally
+| Check | Source file | Run from | Command / environment |
+| --- | --- | --- | --- |
+| Node core | `javascript/tests/test.js` | `javascript/` | `npm ci --ignore-scripts --no-audit --no-fund`, then `npm test` |
+| Python core | `python/tests/test_kron_otp.py` | `python/` | `python -m pip install -e .`, then `python -m unittest discover -s tests -v` |
+| Windows GUI/vault | `python/tests/gui/test_app.py` | repository root | `python -m unittest discover -s python/tests/gui -p test_app.py -v` with Tkinter, Windows DPAPI and installed public PyPI 2.0.0 |
+| Public package smoke | `.github/workflows/registry-smoke.yml` | GitHub Actions | Manually enter published stable `version`; no registry publication |
 
-Node.js (from repo root):
+The Node/Python core suites share `python/tests/totp_vectors.json` (six RFC6238 SHA1 six-digit fixed-time reference values + 80 synthetic cross-language keys/times/codes), and test formatting, input constraints, 30-second rollovers and adjacent-window decisions. The Python core suite has **nine** `unittest` methods. The GUI Windows suite has **eight** methods testing user-bound encryption and UI state. Count is method count, not number of individual vector cases.
 
-```sh
-cd javascript
-npm ci
-npm test
-```
+The GUI test suite is **not** invoked by the existing Linux Python CI job. Node source tests depend on the full monorepo fixture; package publishing does **not** bundle that fixture as a public runtime dependency.
 
-Python (from repo root, in an environment with Python >=3.10):
+## GitHub Actions (exact workflows)
 
-```sh
-cd python
-python -m pip install -e .
-python -m unittest discover -s tests -v
-```
-
-**Development `main` after P02:** Existing input/generation tests remain and both source suites also consume `python/tests/totp_vectors.json`: 6 fixed-time RFC 6238 SHA-1 six-digit reference values (including leading zeros) plus 80 deterministic, public synthetic 160-bit secret/time/OTP cases. JS uses `node:assert/strict` with a temporary `Date.now` mock; Python runs 9 `unittest` methods with a temporary PyOTP clock mock. Both cover Unix times 0,1,29,30,59,60,61, adjacent windows and two-step rejections. This is a **source test**, not a new published version or end-to-end authentication certification.
-
-## GitHub Actions workflows
-
-| Workflow | Trigger | Purpose |
+| Workflow | Trigger | Verified behavior |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | JS/Python or workflow source changes in push/PR | Conditional Node/Python tests; no package publication |
-| `.github/workflows/release.yml` | Relevant `main` pushes, matching `v*` tag pushes, or manual dispatch | Full validation; npm and PyPI publishing jobs are **tag-only** |
-| `.github/workflows/registry-smoke.yml` | Push changing this workflow on `main` or manual dispatch | Download **v1.0.0** npm/PyPI public artifacts, clean install and smoke verification |
+| [KronOTP CI](../.github/workflows/ci.yml) | Pull requests; main pushes affecting `javascript/**`, `python/**` or the workflows | Path-filtered Node 24 / Python 3.12 suites; unconditional stable `Required CI` check aggregating relevant jobs |
+| [KronOTP Release](../.github/workflows/release.yml) | Main push affecting package/workflow release files, manual dispatch, pushed `v*` tags | `validate` tests both packages, dry-runs npm payload, builds/tests PyPI distributions; npm/PyPI **publish jobs only run on a tag push** |
+| [Published Package Smoke](../.github/workflows/registry-smoke.yml) | Its workflow file push on main or manual dispatch | Strict stable numeric SemVer, exact public npm tarball/PyPI wheel download, clean consumer install and installed-version assertions |
 
-A regular documentation-only change does **not** automatically rerun full package tests when outside configured path filters. Do not claim tests ran if no workflow was triggered.
+A **docs-only push on main does not automatically trigger the CI or release workflows** under their configured `push.paths`; do not report an absent run as a failure or fake a PASS. Pull requests trigger the `Required CI` producer, but GitHub branch protection enforcement is a separate repository setting.
 
-Verified v1.0.0 test history:
-- Release tag `v1.0.0`, based on commit `e77155eefd7d18d49fcde489b510f4fd8df5d797`.
-- [Release workflow run 43835128215](https://github.com/vibtoolshq/KronOTP/actions/runs/43835128215): both publish jobs successful.
-- [Public artifact smoke run 43836244524](https://github.com/vibtoolshq/KronOTP/actions/runs/43836244524): npm and PyPI download, fresh install and configured functional checks successful.
+The release workflow validates pushed tags with stable `vX.Y.Z` pattern and requires the tagged commit to equal current `main` HEAD, plus equal npm/PyPI manifest versions. The npm job uses `NPM_TOKEN`; PyPI uses `PYPI_API_TOKEN` via Twine. Those are GitHub Actions secret **names**, not inspected values. Publishing both registries is **non-atomic**; each upload must be reviewed independently.
 
-## Installing a known published version
+## Verified historical results (not tests executed in this docs update)
 
-```sh
-npm install kron-otp@2.0.0
-```
+- **v2.0.0 tag/release:** annotated tag `v2.0.0` at commit `eefafd9934a44243879068d9b8081005e68aeade`. [Tag-push release run 43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691) had successful validation and npm/PyPI publish jobs.
+- Public npm `kron-otp@2.0.0` and PyPI `kron-otp==2.0.0` were independently downloaded, clean-installed and functionally smoke-tested with public fixture input during the release work. This does not mean all supported runtimes/platforms or auth server behavior were tested.
+- [GUI-02 CI 43906779325](https://github.com/vibtoolshq/KronOTP/actions/runs/43906779325) confirmed Python source test and Required CI SUCCESS; JavaScript was correctly SKIPPED on an unrelated GUI-only change. The Windows GUI suite separately passed 8/8 focused tests; it is not part of that Actions job.
+- The historical `v1.0.0` tag and public registry artifacts remain untouched. Older source notes describing “only 1.0.0 published” are **historical**, not current status.
+- The dedicated version-aware `registry-smoke.yml` was **not manually dispatched for v2.0.0** during the release, so do not cite a nonexistent v2 smoke workflow run; instead use the actual independently executed public-artifact checks.
 
-```sh
-python -m pip install kron-otp==2.0.0
-```
+## Release checklist (only when a new release is approved)
 
-Registries:
-- npm: https://www.npmjs.com/package/kron-otp/v/1.0.0
-- PyPI: https://pypi.org/project/kron-otp/1.0.0/
+1. Authorize scope and update package metadata in **both** `javascript/package.json` and `python/pyproject.toml`; align `javascript/package-lock.json` root version and migration documentation.
+2. Run focused Node/Python tests and the release validation flow, including npm payload and `python -m build`/`twine check`.
+3. From verified current main, create a **new** annotated stable `vX.Y.Z` tag matching the manifests. Do not move historical release tags; no tag push without explicit release authorization.
+4. Monitor the GitHub release workflow. Check npm/PyPI publish job conclusions independently and handle partial publication without republishing the same immutable version.
+5. Use manual Published Package Smoke with the **new public version** to verify exact registry artifacts after publication. Record source SHA, released versions and actual evidence.
 
-## How maintainers release a future version
+Current P03 branch/tag governance remains deferred and wider P04 support/security testing remains incomplete; a successful package smoke is not production security certification. No new tag/release is generated by documentation maintenance.
 
-The GitHub workflow only publishes when a **new version tag** passes package and metadata validation.
-
-1. Implement a scoped change, write the private pre-change note, and update tracked `project/` and public `docs/` as appropriate in the same commit.
-2. Increment version in **both** `javascript/package.json` and `python/pyproject.toml`; keep `javascript/package-lock.json` root version aligned and document tested dependencies. Registry versions cannot be overwritten.
-3. Confirm tests/metadata, module license and README, tag ownership, npm and PyPI package publishing authorization.
-4. Ensure GitHub organization Actions secrets `NPM_TOKEN` and `PYPI_API_TOKEN` are valid and correctly scoped (never print their contents). Prefer trusted OIDC publishing where configured; the current workflow uses tokens.
-5. From synchronized `main`, create a fresh annotated tag matching the manifests (for example `v1.0.1`) and push **only when intentionally authorizing publication**.
-6. Monitor the `KronOTP Release` Actions run. Validate npm and PyPI results independently; publishing is **not atomic** across registries.
-7. Verify installation/download from both public registries after propagation; update the pinned version in published smoke tests for the next release.
-
-Do **not** reuse `v1.0.0` or republish `1.0.0`; it is already released. After P03, `registry-smoke.yml` supports an explicitly selected stable published version and checks downloaded/installed npm/PyPI metadata. The current public 1.0.0 is still the only version previously released; smoke success for 1.0.0 is not proof of any unpublished P01/P02 fixes.
-
-## Real security requirements
-
-Do not copy actual shared TOTP secrets, registry tokens or private notes into scripts or documentation. These tests cannot certify server-side OTP replay prevention, account authentication, login UI or unimplemented features.
-
-More integration and manual publishing detail: [Automation and Publishing](./AUTOMATION_AND_PUBLISHING.md).
-
-## P02 shared vectors and source test prerequisites
-
-The Node source-test file reads the shared fixture at `../python/tests/totp_vectors.json` relative to the `javascript/` directory (resolved from `javascript/tests/test.js`); it requires the **full KronOTP monorepo checkout**, not an isolated npm tarball. Python source tests read that same JSON next to `python/tests/test_kron_otp.py`. Runtime imports and published package contents do not depend on the test fixture. The P02 fix and regression tests reside on `main`; npm/PyPI published `1.0.0` remains unchanged until an authorized future tag release.
-
-## Source-only P02 verification status (2026-11-16)
-
-- [GitHub Actions CI run 43851819951](https://github.com/vibtoolshq/KronOTP/actions/runs/43851819951) completed successfully for both JavaScript and Python tests (plus change detection).
-- Python source suite: **9/9 test methods PASS**, including Unix epoch counter 0 and current/next drift validation. Node source suite PASS. Both assert six fixed RFC and 80 independently generated synthetic reference cases.
-- This is **development source on `main`**. Published npm and PyPI version `1.0.0` is unchanged; no new tag, registry upload or public artifact-install verification was performed in P02.
-
-## P03: version-aware published artifact smoke (source on main)
-
-The `KronOTP Published Package Smoke Tests` workflow now accepts a required manual `version` value (example: `1.0.0`) via **Actions → KronOTP Published Package Smoke Tests → Run workflow**. It accepts only stable numeric `MAJOR.MINOR.PATCH`, such as `1.0.0`. A malformed version (or a version not yet on both registries) fails; no download is treated as a successful check without exact installed version matching.
-
-On a push that changes only this workflow on `main`, the smoke target is derived from the matching versions in `javascript/package.json` and `python/pyproject.toml`. This allows an ordinary non-tag test of the already published 1.0.0. To validate a **future** published version, manually run the workflow and enter its exact new published version; the workflow does **not** publish anything.
-
-### Repository administration required — P03 governance BLOCKED
-
-Current GitHub evidence: `main` reports **protected:false**; repository rulesets `[]`; GitHub integration cannot read branch protection (403) or modify rulesets. An authorized repo admin must configure and verify: enforced main branch PR review and appropriate required checks, disallow force pushes and deletion, restricted bypass, and protected `v*` tag creation/update/deletion. Configure environment approval where desired and verify it actually restricts publishing. **A workflow YAML change alone cannot accomplish this.** Do not claim P03 fully CLOSED, or approve P04/P05 release gates, until an authorized owner verifies these controls or explicitly accepts the documented risk.
-
-No new tag, package version, registry upload, credential rotation or production engine change is part of P03.
-
-## Verified P03 workflow results and administrative blocker
-
-- [CI 43855173877](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173877): JavaScript and Python job SUCCESS.
-- [Public registry smoke 43855173893](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173893): select version 1.0.0, download/install/test npm & PyPI; all 3 jobs SUCCESS. Invalid manual version strings were rejected in 7 focused offline resolver checks; future versions must still be tested after their publication.
-- [Release validation 43855173879](https://github.com/vibtoolshq/KronOTP/actions/runs/43855173879): full validation PASS, **npm/PyPI publication SKIPPED** because no version tag was pushed.
-
-**Not a closed release-security phase:** Current GitHub repo has no effective main/tag protection verified (`main protected:false`, rulesets `[]`, protection endpoint 403). An authorized admin must enable and verify those controls (or explicitly accept the risk) before declaring P03 CLOSED; no change was made to engine source, published packages or tags.
-
-### P03 required-check administration guidance
-
-For main branch protection, choose the **Required CI** status from the `KronOTP CI` workflow, rather than individual conditional JavaScript/Python jobs: it is available on all pull requests including docs-only, and fails when a selected engine test fails. Verify its exact displayed check name and source app in GitHub Settings before enforcing. For changes to release/registry workflow files, both engine suites now run through CI. Administrative main/tag protection must still be enabled separately.
-
-## v2.0.0 expedited release boundary (2026-11-16)
-
-The owner explicitly authorized publication before the P03 GitHub branch/tag ruleset hardening and P04 production/OS/security acceptance matrix. That is a **recorded process exception**, not closure of KO-007 or completion of P04. The published v1.0.0 artifact remains immutable. This release candidate's manifest and tag versions must both be **2.0.0**, validated by Actions before registry upload. Source CI and the tag-release workflow test both engines; check npm and PyPI upload jobs and separately verify public v2.0.0 download/install. Passing prior v1.0.0 registry smoke is not evidence that v2.0.0 reached registries.
-
-## v2.0.0 actual release evidence (2026-11-16)
-
-- Tagged source [v2.0.0](https://github.com/vibtoolshq/KronOTP/tree/v2.0.0) built and published by [KronOTP Release Actions run 43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691): validate, npm publish, PyPI publish **SUCCESS**.
-- Public npm `kron-otp@2.0.0`: download `kron-otp-2.0.0.tgz`, isolated temporary Node consumer install, verify installed version, six-digit generate/verify, invalid secret nonmatch and weak-key rejection **PASS**.
-- Public PyPI `kron-otp==2.0.0`: official PyPI wheel `kron_otp-2.0.0-py3-none-any.whl` downloaded, installed in fresh Python venv with dependency, version/method/weak-key/Unix-epoch regression checks **PASS**. Default local pip index initially lacked 2.0.0 while the official `https://pypi.org/simple` worked; pin the official index or refresh a stale mirror if necessary.
-- These consumer checks ran outside GitHub Actions; the separately version-aware registry-smoke workflow was not manually dispatched for v2.0.0. Do not claim that run exists.
-- v2.0.0 changes JS invalid-secret verify to boolean `false`, both engines enforce >=14 decoded secret bytes and input caps, Python epoch boundary fix. This is a **major compatibility change** from historical 1.0.0. GitHub main/tag protection and P04 long-duration/OS/security tests remain **deferred**, not PASS.
-
-## GUI-01 — optional Tkinter live tester (source-only, no release)
-
-The repository contains [python/tests/gui/app.py](../python/tests/gui/app.py) and [GUI setup/use guide](../python/tests/gui/README.md). This is a **standalone local test app**, not part of the installed PyPI wheel and not a change to KronOTP's public Python API. It only needs Tkinter (usually bundled with Windows Python) and the published PyPI `kron-otp==2.0.0` distribution.
-
-```powershell
-python -m pip install kron-otp==2.0.0
-python python/tests/gui/app.py
-```
-
-Run these from repository root using the **same Python interpreter**. The GUI checks that exact installed distribution version and file origin; it does not use `python/src/kron_otp.py` or an editable checkout. Paste your own Base32 secret, choose Generate OTP, view current code/30s countdown, optionally Show/Hide key and Copy OTP. Display refreshes at the next 30s boundary while enabled and clears when key changes. Invalid input is rejected; no key is logged or saved.
-
-**Limits:** GUI does not authenticate any remote account or implement replay defense/server rate limiting. It is not part of existing Python `unittest` source suite or GitHub Actions GUI/browser automation; normal CI still exercises engine tests. For GUI integration evidence, consult the dated tracked GUI-01 development log after focused local verification. No PyPI/npm package update, build, tag or release is associated with GUI-01.
-
-### GUI-01 actual test results (2026-11-16)
-
-- Tested on Windows with isolated Python 3.12 virtual environment and **installed official public PyPI `kron-otp==2.0.0`** (not repository source). Startup module path and version guards PASS, including rejection of mismatched local imports.
-- Tkinter GUI launched and closed cleanly; Generate/invalid inputs, mask toggle, live countdown/59→60 rollover refresh, OTP-only clipboard copy, secret-change reset all PASS against the installed engine with a public synthetic fixture.
-- [GitHub CI 43900702231](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702231): Python tests, change detection and Required CI SUCCESS; JavaScript tests SKIPPED as expected. [Branch release validation 43900702066](https://github.com/vibtoolshq/KronOTP/actions/runs/43900702066) PASS; no npm/PyPI publication occurred.
-- The standalone GUI is distributed as a **GitHub source example**, not with the PyPI package. It has not been formally qualified visually across all operating systems. Do not conflate this test example with the KronOTP library's production-security assurance.
-
-## GUI-02 local multi-account Authenticator (source-only)
-
-GUI-02 upgrades the previous tester into a **production-oriented local desktop Authenticator** in [`python/tests/gui/`](../python/tests/gui/README.md): multiple accounts, search/add/edit/delete, `otpauth://totp` import limited to SHA1/6 digits/30 seconds, in-memory Use once, live codes, local verify, 15-second conditional clipboard clear, Windows-only DPAPI CurrentUser encrypted saved accounts, manual Lock and five-minute inactivity lock. It does not modify the published Python engine or ship with the wheel. No independent master password, cross-device vault backup, server authentication or QR scanning.
-
-```powershell
-python -m pip install kron-otp==2.0.0
-python python/tests/gui/app.py
-```
-
-For focused Windows test with the installed PyPI distribution:
-
-```powershell
-python -m unittest discover -s python/tests/gui -p test_app.py -v
-```
-
-These GUI tests are **not automatically executed by the existing Linux GitHub Python CI job**; run on Windows with Tkinter/DPAPI. Published PyPI KronOTP verifies that the source app actually uses the installed engine. GUI-02 test results and CI evidence are recorded in `project/DEVELOPMENT_LOG.md` only after verification. A local app is not full production/security certification; cryptographic at-rest protection applies to Windows vault only and cannot defend against a compromised logged-in Windows user. Preserve external account recovery codes.
-
-### GUI-02 verification results (2026-11-16)
-- On Windows Python 3.12, against the **installed official PyPI `kron-otp==2.0.0`**, the focused GUI/DPAPI suite `python -m unittest discover -s python/tests/gui -p test_app.py -v` finished **8/8 PASS** (exit 0), with no Tk callback shutdown warnings after targeted correction. No actual user secrets were used.
-- Tested: URI (supported/rejected algorithms, dimensions and malformed inputs), Windows DPAPI encrypted vault read/write/tamper, multi-account + temporary usage, search/edit/delete, clipboard conditional clear, OTP rollover, privacy lock/idle lock, Tk clean close. The test does not prove remote account login.
-- [GitHub CI run 43906779325](https://github.com/vibtoolshq/KronOTP/actions/runs/43906779325): Python engine tests and Required CI SUCCESS, JS SKIPPED as intended. Existing Linux CI does **not** execute the Windows-only Tk/DPAPI integration suite.
-- GUI-02 is still distributed through GitHub source, not PyPI wheel or Windows EXE; no new tag or package publication. User's Windows account and separate recovery backups remain essential. Do not treat local GUI testing as an independent security penetration test.
+[Developer contribution process](./DEVELOPMENT_AND_CONTRIBUTING.md) · [Automated publishing](./AUTOMATION_AND_PUBLISHING.md) · [Coverage QA](./COVERAGE_AND_QA.md).

@@ -1,25 +1,25 @@
-# KronOTP — Public User Documentation
+# KronOTP — Public Developer Documentation
 
-This is the **Git-tracked, public** user manual for the **existing** Node.js and Python TOTP packages. It is not the maintainers' development notebook or a place for unverified planning.
+This Git-tracked directory is the documentation suite for **npm `kron-otp@2.0.0`**, **PyPI `kron-otp==2.0.0`**, and the optional source-only Python Tkinter Authenticator. It is written for developers integrating, testing, extending or maintaining the actual libraries—not for an imagined application, cloud API or CLI.
 
-## What you can do with KronOTP today
+**Start with [Developer documentation index](./index.md).**
 
-- Generate a six-digit TOTP string from an **already provisioned Base32 shared secret**.
-- Verify a six-digit token locally with an allowed ±one 30-second clock step.
-- Use either the published `kron-otp` Node.js CommonJS package or the published Python `kron_otp` module.
-- Integrate token generation in your own authorized browser automation or other applications.
+## Public capability and limitations
 
-**Product scope:** KronOTP is a pair of libraries with no installed GUI, web page, HTTP API server or browser automation service. The GitHub repository also contains a **source-only local Tkinter Authenticator app** at `python/tests/gui/app.py`, providing multi-account OTP generation with optional encrypted Windows DPAPI vault. The app is not in the published PyPI wheel, does not store a server account or log into remote sites, and uses only the installed PyPI engine for TOTP. See its [installation and security guide](../python/tests/gui/README.md).
+- The two published libraries each expose a `KronOTP` class with only **two public static methods**: `generate(secret)` and `verify(secret, token)`.
+- The engine fixes SHA1 / six digits / 30 seconds, requires a canonical bounded Base32 shared secret and accepts ±one counter for local verification.
+- There is no public configurable algorithm, QR scanner, HTTP server, plugin, CLI, database, replay block, rate-limit system or account-provisioning service.
+- The **GitHub repository** separately contains a source-only multi-account Tkinter Authenticator; Windows opt-in saves use user-bound DPAPI. That app **does not ship with the PyPI wheel** and is not a supported engine API or complete authentication server.
+- Public packages were released as version **2.0.0**; historic v1.0.0 is still available but has incompatible legacy validation behavior.
 
-## Start here (actual files)
+## Read in this order
 
-1. [Install and set up](./INSTALLATION.md) — prerequisites, npm/PyPI versions, install/import, local development setup.
-2. [API reference](./API_REFERENCE.md) — existing methods, inputs, outputs, error contracts, defaults, language differences.
-3. [Usage & troubleshooting](./USAGE_AND_TROUBLESHOOTING.md) — end-to-end user workflow, samples, invalid keys, time sync and safety.
-4. [Automation and publishing](./AUTOMATION_AND_PUBLISHING.md) — working-example Playwright, Puppeteer and Selenium patterns; manual and CI publishing procedures.
-5. [Testing & releases](./TESTING_AND_RELEASES.md) — how to test source/published versions, run the optional Tkinter GUI and understand what CI actually verifies.
-6. [MINIFEST](./MINIFEST.md) — full inventory of docs folder files.
+[Quickstart](./QUICKSTART.md) → [Install & requirements](./INSTALLATION.md) → [Complete public API](./API_REFERENCE.md) → [Architecture](./ARCHITECTURE.md) → [Integration](./INTEGRATION_GUIDE.md) → [Testing & releases](./TESTING_AND_RELEASES.md).
 
-## Keeping public guidance correct
+For configuration/compatibility, debugging, contribution, FAQ and coverage see the [full navigation index](./index.md). [Canonical MINIFEST](./MINIFEST.md) lists **every direct docs file**, while [MANIFEST](./MANIFEST.md) is a compatibility alias.
 
-Every user-facing change (API behavior, install commands, input validation, error handling, features, prerequisites, releases, limitations) **must update the relevant docs in the same commit**. Check actual implementation or passing tests; never guess or promise functionality not in source. Do not expose developer-only local `notes/`, credentials, private planning, or speculative defects as public feature claims. Source-of-truth maintainer reference lives in `project/` (see root `AGENTS.md`).
+## Maintenance and privacy policy
+
+Before changing tracked source/docs, follow [AGENTS.md](../AGENTS.md) and [AI_INSTRUCTIONS.md](../AI_INSTRUCTIONS.md). Verify public signatures, metadata, tests and workflows against implementation, update relevant `project/` maps and docs in the same change, and record only executed QA as PASS. Never put live TOTP keys, passwords, registry tokens or private `notes/` content into public documentation. The local `notes/` directory is ignored but not encrypted.
+
+This documentation provides **technical contracts**, not proof of universal production/security certification; actual GitHub branch/tag protection and expanded external P04 assurance remain deferred.

@@ -31,12 +31,22 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `.github/workflows/release.yml` | P03 secure tag-push-only publisher gating, current-main-head tag check, least-privileged token permissions, SHA-pinned action versions |
 | `.github/workflows/registry-smoke.yml` | P03 strict SemVer target resolver, dynamic npm/PyPI download, install and exact-version verification; manual input and manifest-derived push default |
 | `docs/AUTOMATION_AND_PUBLISHING.md` | Public Playwright/Puppeteer/Selenium integration examples and publishing steps |
-| `docs/README.md` | Public docs entry point and maintenance guidelines |
-| `docs/MINIFEST.md` | All direct docs entries |
-| `docs/INSTALLATION.md` | Public installation and runtime setup |
-| `docs/API_REFERENCE.md` | Precise existing JavaScript/Python API and its limitations |
-| `docs/USAGE_AND_TROUBLESHOOTING.md` | Supported use flow, non-existent UI clarification, troubleshooting |
-| `docs/TESTING_AND_RELEASES.md` | End-user tests, published-package links and release instructions |
+| `docs/README.md` | Public developer docs boundary, navigation and maintenance requirements |
+| `docs/MINIFEST.md` | Canonical direct Markdown file inventory (mandatory repository spelling, currently 17 files) |
+| `docs/MANIFEST.md` | Conventional manifest spelling; compatibility link to canonical MINIFEST |
+| `docs/index.md` | Complete developer-docs homepage and structured navigation |
+| `docs/QUICKSTART.md` | Executable, synthetic-secret Node/Python 2.0.0 quickstart |
+| `docs/ARCHITECTURE.md` | Source implementation data flow, real module mapping, GUI/vault boundaries and CI diagrams |
+| `docs/CONFIGURATION_AND_COMPATIBILITY.md` | Fixed engine options, actual dependency declarations, runtime requirements and v1→v2 migration |
+| `docs/INTEGRATION_GUIDE.md` | Secure server/application integration patterns, tested sync calls, optional GUI/automation boundaries |
+| `docs/DEVELOPMENT_AND_CONTRIBUTING.md` | Verified local dev setup, contribution rules, workflow checks and tag-publishing safety |
+| `docs/DEBUGGING.md` | Diagnostic examples, sanitized errors, runtime import and vault troubleshooting |
+| `docs/FAQ.md` | Focused developer frequently asked questions and unsupported feature boundaries |
+| `docs/COVERAGE_AND_QA.md` | Forensic implementation/file/API/capability coverage matrix, corrected documentation mismatches and actual QA proof |
+| `docs/INSTALLATION.md` | v2.0.0 npm/PyPI installations, source editable setup, GUI source-only instructions and uninstall |
+| `docs/API_REFERENCE.md` | Exhaustive public Node/Python KronOTP class and 2-static-method signatures, types, errors and limitations |
+| `docs/USAGE_AND_TROUBLESHOOTING.md` | Supported library usage, source-only GUI distinction, clock/import errors and migration |
+| `docs/TESTING_AND_RELEASES.md` | Exact tests and CI triggers, tag-gated publishing, public v2.0.0 verification and no-release scope |
 | `project/README.md` | Developer-facing reference index and purpose |
 | `project/MINIFEST.md` | Inventory of all project-folder entries |
 | `project/ARCHITECTURE.md` | Actual module/dependency design and TOTP data flow |
@@ -48,3 +58,7 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `notes/` | Private local-only working folder; **never included in Git or published archives** |
 
 The above is a map, not a claim that engine-level APIs, pages, buttons or databases exist beyond their documented paths. Update this file in the same commit as any future file move/add/remove.
+
+## DEVDOCS-01 forensic documentation inventory (2026-11-19)
+
+The Git-tracked `docs/` folder now includes a **flat developer documentation suite**, not product UI implementation. `docs/index.md` is the developer entry; `docs/MINIFEST.md` is the exact canonical inventory, with `docs/MANIFEST.md` an alias for readers expecting the conventional name. Public engine interfaces remain solely the two static `KronOTP` operations per language. No application-source, package or workflow change is made by this documentation phase.

@@ -1,96 +1,127 @@
-# KronOTP API Reference — v2.0.0 (P01 + P02)
+# Public API Reference — KronOTP v2.0.0
 
-**Version boundary:** This page documents **v2.0.0**, incorporating P01 and P02. Historical npm/PyPI `1.0.0` artifacts remain unchanged, and their invalid-secret handling differs. Upgrading from 1.0.0 to 2.0.0 can require consumer code changes.
+**Complete supported public package API:** one `KronOTP` class per language, each exporting **two static methods**. No other supported public class methods, public constructor arguments, interfaces, enums, hooks, events, CLI commands, network operations or configuration setters are implemented.
 
-This lists **all existing public API methods** of the current `KronOTP` class in each language. There are no instance settings, public constructor, asynchronous requests, stored accounts or extra features.
+## Shared data contract
 
-## Shared defaults
-
-| Property | Value |
+| Property | Runtime behavior |
 | --- | --- |
-| TOTP algorithm | SHA-1 HMAC |
-| Token length | 6 ASCII decimal digits, always a **string** (leading zeroes retained) |
-| Time step | 30 seconds |
-| Verification time tolerance | Current step and one previous/next step (±30-second step) |
-| Secret input | Canonical ASCII Base32, case-insensitive, only ASCII space/tab/CR/LF/FF/VT ignored; >=14 decoded bytes, <=4096 raw characters and <=1024 cleaned characters |
-| Provisioning | External; caller must already have lawful access to shared secret |
-| State storage / replay block | **Not implemented** in these libraries |
+| Secret type | Nonempty Base32 **string**, ASCII alphabet A–Z/2–7 (case-insensitive) and correct optional trailing `=` padding |
+| Whitespace normalization | Only ASCII space, tab, LF, CR, FF, VT are removed |
+| Input length | ≤4096 raw characters; ≤1024 cleaned Base32 characters |
+| Decoded secret length | ≥14 bytes required; ≥20 securely random bytes recommended for new provisioning |
+| Algorithm | HMAC-SHA1 |
+| Output | Exactly **6 ASCII digits as a string**, leading zeros retained |
+| Time step | 30 seconds from system clock |
+| `verify` window | Previous, current or next 30-second counter (±1 step) |
+| State and replay tracking | None; `verify` is repeatable for the same valid token |
 
-## JavaScript (Node.js, CommonJS)
+Base32 normalization also checks canonical unused padding bits and padding placement; valid-looking, noncanonical encodings can fail. No public arguments expose algorithm, number of digits, step, timestamp or allowed clock window.
 
-For **v2.0.0**: `npm install kron-otp@2.0.0`. Source: `javascript/src/kron-otp.js`.
+## Node.js / CommonJS — `javascript/src/kron-otp.js`
+
+**Distribution:** npm `kron-otp@2.0.0`, Node `>=20.19.0`, dependency `otpauth ^9.6.0`.
 
 ```js
 const KronOTP = require('kron-otp');
-// Also valid: const { KronOTP } = require('kron-otp');
-
-const secret = process.env.TOTP_SECRET;
-if (!secret) throw new Error('Missing TOTP_SECRET');
-
-const token = KronOTP.generate(secret);      // string: exactly 6 digits
-const accepted = KronOTP.verify(secret, token); // boolean
+// Named alias also refers to the SAME class:
+// const { KronOTP } = require('kron-otp');
 ```
+
+**Export identity:** `module.exports = KronOTP` and `module.exports.KronOTP = KronOTP`. The exported class is used via **static** methods, no instance needed.
 
 ### `KronOTP.generate(secret)`
 
-- Argument: `secret` must be a string containing ASCII Base32 characters A–Z/2–7 (case-insensitive), legal trailing `=` padding and optionally ASCII space/tab/CR/LF/FF/VT.
-- Returns: exactly 6 digits as a string, derived from current system time.
-- Throws: sanitized `TypeError` if secret is missing/wrong type, noncanonical, <14 decoded bytes, >4096 raw characters or >1024 cleaned Base32 characters.
-- Validation is performed by private `#createTOTP`, then `OTPAuth.Secret.fromBase32`.
-- **v2.0.0 behavior:** JavaScript now enforces the same 14-decoded-byte minimum as Python. A cryptographically random >=20-byte secret is recommended for new provisioning; length alone is not entropy.
+| Parameter | Required | Type | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `secret` | Yes | `string` | None | Canonical Base32 shared secret already provisioned for caller |
+
+**Return:** `string` of six ASCII decimal characters, computed from the system clock.
+
+**Failure:** Throws `TypeError` if secret is not a string, is empty/malformed/noncanonical, exceeds limits, or decodes to fewer than 14 bytes. Input-dependent errors use sanitized messages and do not reveal the secret. Dependency/internal unexpected failures are not promised to be handled by this public contract.
+
+```js
+const KronOTP = require('kron-otp');
+const key = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'; // RFC public fixture
+const otp = KronOTP.generate(key);
+console.log(/^[0-9]{6}$/.test(otp)); // true
+```
 
 ### `KronOTP.verify(secret, token)`
 
-- Arguments: Base32 string `secret`; exactly six-character ASCII decimal string `token`.
-- Returns: `true` if the token matches within ±one time step; otherwise `false`.
-- Returns `false` for an invalid secret or token; token shape is checked before secret decoding. This is a **breaking change** from previously published JS `1.0.0` which threw `TypeError` for a bad secret.
-- Other token input types (e.g. numeric `123456`) return `false` irrespective of secret validity.
+| Parameter | Required | Type | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `secret` | Yes | `string` | None | Same Base32 shared secret (ordinary invalid input yields false) |
+| `token` | Yes | `string` | None | Exactly six ASCII decimal digits; never a number |
 
-## Python
+**Return:** `boolean` — `true` only when OTPAuth validates the entered token at the current/adjacent step; `false` on ordinary mismatch, malformed token or invalid secret. **Does not throw for expected invalid secrets/tokens** in v2.0.0, a breaking difference from v1.0.0.
 
-For **v2.0.0**: `python -m pip install kron-otp==2.0.0`. Source: `python/src/kron_otp.py`.
+```js
+const matches = KronOTP.verify(key, otp); // true when current token remains within window
+const invalid = KronOTP.verify(key, 'oops'); // false
+```
+
+**Internal-only:** `KronOTP.#createTOTP(secret)`, `OTPAuth.Secret` and `OTPAuth.TOTP` are implementation details, not exported KronOTP extension points.
+
+## Python — `python/src/kron_otp.py`
+
+**Distribution:** PyPI `kron-otp==2.0.0`, Python `>=3.10`, dependency `pyotp>=2.12,<3`.
 
 ```python
 from kron_otp import KronOTP
-
-secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"  # Public test fixture only
-token: str = KronOTP.generate(secret)
-accepted: bool = KronOTP.verify(secret, token)
 ```
 
 ### `KronOTP.generate(secret: str) -> str`
 
-- Argument: string ASCII Base32 secret; removes only ASCII whitespace (space/tab/CR/LF/FF/VT), uppercases after rejecting non-ASCII, rejects invalid/noncanonical encodings, <14 decoded bytes, >4096 raw or >1024 cleaned characters.
-- Calls internal `_normalize_secret` then `_totp`, then `pyotp.TOTP.now()`.
-- Returns: exactly six-digit string.
-- Raises sanitized `ValueError` on bad secret including non-string/oversized/short keys; both wrapper and PyOTP >=2.12 require **14 decoded bytes**.
+| Parameter | Required | Type | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `secret` | Yes | `str` | None | Canonical Base32 secret; invalid values rejected |
+
+**Return:** Six ASCII decimal characters as `str`. **Failure:** raises `ValueError` for expected malformed, non-string, weak, noncanonical or excessive secrets. This is a synchronous static method; do not instantiate the class.
+
+```python
+from kron_otp import KronOTP
+
+secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"  # public fixture only
+code: str = KronOTP.generate(secret)
+assert len(code) == 6 and code.isascii() and code.isdigit()
+```
 
 ### `KronOTP.verify(secret: str, token: str) -> bool`
 
-- Returns `True` for a matching six-digit token in the existing current/adjacent 30-second time steps. At Unix epoch seconds 0–29, explicitly checks valid counters 0 and +1 without evaluating negative counter −1; otherwise uses PyOTP `valid_window=1`.
-- Returns `False` for mismatched token, wrong token format, invalid or too-short secret.
-- It checks token format first, then builds the generator. It returns `False` for expected invalid-secret input, as now does JavaScript in v2.0.0.
+| Parameter | Required | Type | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `secret` | Yes | `str` | None | Same Base32 secret; ordinary invalid values yield False |
+| `token` | Yes | `str` | None | Exactly six ASCII decimal characters |
 
-## Public API differences and design limitations
+**Return:** `bool` — `True` for a matching current/adjacent counter; `False` for malformed token, invalid secret or mismatch. Python samples time once. At Unix epoch times 0–29 seconds it avoids PyOTP's negative counter evaluation by explicitly checking counters 0 and +1; otherwise it passes `valid_window=1`.
 
-| Input scenario | JavaScript `KronOTP` | Python `KronOTP` |
+```python
+assert KronOTP.verify(secret, code) is True  # locally valid current token
+assert KronOTP.verify(secret, "12345") is False
+```
+
+**Internal-only:** `KronOTP._normalize_secret(secret)` and `KronOTP._totp(secret)` are ordinary Python attributes with underscore-prefixed names, **not supported public APIs**. Their signatures and return values may change without a public API version promise.
+
+## Error and cross-language comparison
+
+| Scenario | Node.js | Python |
 | --- | --- | --- |
-| Good canonical >=160-bit Base32 | Generate/verify | Generate/verify |
-| 80-bit Base32 example | Rejected in v2.0.0 | Rejected in v2.0.0 |
-| Invalid secret at generate | Throws `TypeError` | Raises `ValueError` |
-| Invalid secret at verify | Returns `false` in v2.0.0 | Returns `False` in v2.0.0 |
-| Invalid token (valid secret) | `false` | `False` |
-| Custom digits, algorithm, time-step | Not exposed | Not exposed |
-| Single-use OTP tracking | Not implemented | Not implemented |
+| Valid key, generate | `string` | `str` |
+| Invalid key, generate | `TypeError` | `ValueError` |
+| Valid current or adjacent token | `true` | `True` |
+| Wrong token length/format | `false` | `False` |
+| Invalid key, verify | `false` | `False` |
+| Custom time/algorithm/digits | No exposed option | No exposed option |
+| Account storage/issuer/QR data | Not included | Not included in library |
+| OTP single-use/replay block | Not included | Not included |
 
-**P01 migration:** Choose randomly generated >=160-bit keys for newly provisioned accounts, although the implementation minimum remains 112 bits for compatibility with existing Python keys. Consumers who depended on short JS keys, JS verify exceptions or broad Unicode whitespace acceptance must adapt before a future release. Python epoch-start verification was fixed for v2.0.0 by P02; historical PyPI `1.0.0` remains unchanged.
+**Upgrade warning:** v1.0.0 could throw `TypeError` on JavaScript verify of bad secret; v2 normally returns false. v2 also rejects short Base32 keys that legacy consumers may have used. Plan a major-version migration and reprovision weak keys.
 
-## Integration responsibility
+## Not part of the public library
 
-The library's `verify()` is a local cryptographic comparison. It does not authenticate a user identity or enforce rate limiting, login sessions, OTP replay prevention, account locks or token attempt counters. Those protections belong to the application/server implementing the login flow.
+`python/tests/gui/app.py` defines a **source-only** `Authenticator` UI, `load_pypi_engine()`, `parse_auth_input()` and account management methods. `python/tests/gui/vault.py` defines `AccountVault`, `VaultError` and `validate_accounts()` for Windows DPAPI storage. **These modules ship in the Git repository, not inside the PyPI wheel**, and are implementation details of the optional application, not supported KronOTP package interfaces.
 
-See [Installation](./INSTALLATION.md), [Usage & troubleshooting](./USAGE_AND_TROUBLESHOOTING.md) and [Automation](./AUTOMATION_AND_PUBLISHING.md).
+The libraries do **not** expose exceptions named `KronOTPError`, server middleware, an HTTP client, CLI, webhooks, TypeScript declarations, plugin registry or async APIs.
 
-### P02 deterministic verification evidence
-
-The source suites now share six fixed-time RFC 6238 SHA-1 six-digit expected OTPs and 80 synthetic 160-bit Base32 secret/timestamp/OTP triples. Both engines must generate the same expected values and verify them at matching fixed timestamps. Python additionally guards negative drift counters at Unix epoch time 0–29. These are source regression tests, not a public timestamp parameter or change to 30-second/±1 configuration.
+[Quickstart](./QUICKSTART.md) · [Architecture](./ARCHITECTURE.md) · [Compatibility](./CONFIGURATION_AND_COMPATIBILITY.md) · [Integration](./INTEGRATION_GUIDE.md)

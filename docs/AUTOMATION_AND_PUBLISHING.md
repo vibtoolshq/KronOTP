@@ -18,14 +18,14 @@ These samples illustrate the TOTP step; they do not defeat, remove, or bypass au
 
 ### 1.2 Node.js — Playwright
 
-In an automation project, **after the package is published**, install:
+In your authorized automation consumer project, install the already-published KronOTP package and your separately chosen browser framework:
 
 ~~~powershell
-npm install kron-otp playwright
+npm install kron-otp@2.0.0 playwright
 npx playwright install chromium
 ~~~
 
-For **local monorepo use before publishing**, change `require('kron-otp')` to a path to `KronOTP/javascript/src/kron-otp.js` and install its `otpauth` dependency in the `javascript/` module first.
+For **local source checkout testing** instead of the already-published package, require `KronOTP/javascript/src/kron-otp.js` by an appropriate relative/absolute path and first install its `otpauth` dependency in `javascript/`. This is a development-only import, not the npm package entry.
 
 Example `playwright-2fa.js` (CommonJS):
 
@@ -294,3 +294,10 @@ The published-package smoke workflow accepts a **manual stable version** (such a
 ### Expedited v2.0.0 release and compatibility
 
 A maintainer explicitly authorized v2.0.0 before GitHub branch/tag governance controls and P04 production acceptance were completed. This is a documented security-process exception, not proof of full production hardening. JavaScript v2.0.0 verifies expected invalid secrets by returning `false` rather than throwing; both languages reject Base32 secrets <14 decoded bytes, Unicode-only whitespace and oversized input. Python v2.0.0 fixes epoch-start token verification. The release workflow publishes only on a pushed new version tag matching current main and both manifests, and upload jobs are non-atomic; independently check npm and PyPI after publication. No UI, server state, throttling or replay protection is provided by the library.
+
+## Current developer-reference boundary (audit 2026-11-19)
+
+- **Published current package version is 2.0.0 for both npm and PyPI.** The older 1.0.0 and P01–P03 passages above are historical release/process context, not claims that 2.0.0 is unpublished. Never reuse an existing published version or move an old tag.
+- Playwright, Puppeteer and Selenium are **external optional consumer frameworks** used by example applications, not dependencies of KronOTP. The example selectors, login URL, credentials and expected 2FA page belong to the consumer's own authorized test environment; sample scripts must be adapted there.
+- Browser automation examples require an **already-provisioned Base32 TOTP secret**; no extraction, bypass, account registration, remote-login API or token vault is provided by the library. Keep server-side replay prevention and rate limits in the integrating application.
+- Maintainer tag publication is handled by `.github/workflows/release.yml` after an authorized new `vX.Y.Z` tag push matching the current main HEAD and both package versions; branch/tag protection rules remain a separately deferred governance action. See [updated testing and release reference](./TESTING_AND_RELEASES.md), [developer setup](./DEVELOPMENT_AND_CONTRIBUTING.md) and [public API](./API_REFERENCE.md).
