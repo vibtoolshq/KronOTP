@@ -4,7 +4,7 @@
 
 ## Audited implementation inventory
 
-- **40 tracked blob files** found in the initial Git tree (including repository policies, docs, metadata, tests, code, workflows and licenses); **52** total Git tree items including directories. No private ignored `notes/` were included.
+- **41 tracked blob files** found in the initial Git tree (including repository policies, docs, metadata, tests, code, workflows and licenses); **52** total Git tree items including directories. No private ignored `notes/` were included.
 - **Four implementation modules of interest:** `javascript/src/kron-otp.js`, `python/src/kron_otp.py`, `python/tests/gui/app.py` and `python/tests/gui/vault.py`; **three test modules:** JS core test, Python core test and GUI/vault test.
 - **Public package exports:** JavaScript `KronOTP` class exported as default CommonJS and named alias **of the same class**; Python `KronOTP` class import. **Two distinct public class surfaces**, each with `generate` and `verify`: **four callable public methods**. No supported public constants/configuration objects/interfaces/exception classes/CLI flags/events/hooks.
 - **Private implementation:** JavaScript `#createTOTP`; Python `_normalize_secret`/`_totp`; Tkinter `Authenticator`, URI/label helpers, Windows `AccountVault` and `VaultError`. These are documented for maintenance but **not** advertised as supported package APIs.
@@ -32,7 +32,7 @@
 - **Historical verified source tests:** Node `javascript/tests/test.js`, Python `python/tests/test_kron_otp.py` (9 unittest methods), six fixed-time RFC SHA1 six-digit examples plus 80 synthetic cross-language cases. These tests do not prove third-party account acceptance.
 - **Historical verified GUI test:** Windows Python 3.12 installed PyPI v2.0.0; `python/tests/gui/test_app.py` eight focused tests covering UI/vault; existing Linux GitHub CI does **not** run GUI.
 - **Public package release:** npm/PyPI v2.0.0 published and install-tested in prior release workflow [43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/43867458691). This task does not republish or retag.
-- **Current documentation-run example checks / link QA / Git sync:** **To be populated from actual post-edit verification before closure.** Do not infer PASS until executed.
+- **Current documentation-run verified checks:** Windows public-fixture examples — Python **installed PyPI `kron-otp==2.0.0`** generate/verify PASS; Node **current repository source** generate/verify PASS. Focused documentation QA ran on the Git-tracked docs suite after fast-forward local pull: **17 direct Markdown files**, **110 valid internal relative links**, **8 Python fenced code blocks** parsed by `ast.parse`, **7 JavaScript fenced blocks** syntax-checked with Node, canonical MINIFEST exactly matching all docs, and source-code/manifest/workflow blob SHA comparison unchanged against the baseline. `git diff --check` PASS, changes restricted to **19 Markdown paths** (17 docs, 2 project), with clean worktree at the audited SHA. Syntax checks do **not** establish end-to-end execution of every optional automation example; those depend on consumer-specific frameworks/sites. GitHub/local final closeout SHA is verified separately after syncing.
 
 ## Corrected documentation mismatches
 
@@ -46,3 +46,7 @@
 No external penetration test, complete multi-platform/low-runtime matrix, sustained performance benchmark, secret-memory zeroization proof, QR scanner, independent live authenticator provider integration or server replay defense validation was performed. No assertion is made about real GitHub publisher secret scope or universally enforced repository protections. The source-only Windows DPAPI app's security depends on the signed-in Windows account and separately retained recovery materials.
 
 This is **documentation verification**, not a new release or security certification. [Document index](./index.md) · [Manifest](./MINIFEST.md).
+
+## Documentation implementation provenance
+
+Initial new documentation GitHub commit: [4813faa8d9a41c8bcd631df5880bf7baee9b0687](https://github.com/vibtoolshq/KronOTP/commit/4813faa8d9a41c8bcd631df5880bf7baee9b0687). The subsequent documentation-only closeout corrects the verified tracked-file count and adds actual link/code-syntax audit results. **Documentation maintenance does not produce a new workflow run** under the repository's path-filtered main-push triggers; no release/tag or package changes were made.
