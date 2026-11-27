@@ -5,6 +5,22 @@ order: 50
 draft: false
 ---
 
+## P04 consolidated qualification — 2026-11-28
+
+**Current status (2026-11-28):** P01–P03 closed; P04 qualification evidence verified and consolidation acceptance pending this documentation PR and final closeout. P05 final production/release acceptance has not started. Older dated statements below about deferred governance, unexecuted P04 tests or offline clone are historical, not current status. No new package release or application change.
+
+| Hosted environment | Node.js tested versions | Python tested versions |
+| --- | --- | --- |
+| Ubuntu 24.04 x64 | 20.19.0, 22.23.5, 24.22.3, 26.13.1 | 3.10.22, 3.11.18, 3.12.16, 3.13.18, 3.14.10, 3.15.2 |
+| Windows Server 2025 x64 | 20.19.0, 24.22.3 | 3.10.0, 3.10.11, 3.12.10 |
+| macOS 15 ARM64 | 20.19.0, 24.22.3 | 3.10.11, 3.12.10 |
+
+19 selected targets, 38 source/installed v2.0.0 suites passed in [46058729635](https://github.com/vibtoolshq/KronOTP/actions/runs/46058729635). Exact Python 3.10.0 on Ubuntu 24.04 was not tested; its lower-bound target was explicitly relocated to Windows. These are observed combinations, not an exhaustive Cartesian product or guarantee of every future patch, platform or dependency resolution. Declared floors remain Node >=20.19.0 and Python >=3.10.
+
+Production use should choose current security-patched upstream-supported runtimes, not merely the declared minimum. At 2026-11-28, the Node release information lists 22/24/26 LTS and 20 EOL; Python 3.10 reached its scheduled October 2026 EOL, while 3.11–3.15 are within their upstream support windows. Prefer a maintained Node LTS and maintained stable Python (e.g. 3.14 with current patches); verify the current lifecycle and OS/vendor patch availability before deployment. See [Node release status](https://nodejs.org/en/about/previous-releases) and [Python version status](https://devguide.python.org/versions/). The historical minimum-version tests do not recommend obsolete or unpatched runtime binaries.
+
+Installed public packages are exact v2.0.0; source dependency lock and consumer resolution are distinct. Python has no full committed runtime dependency lock. No fresh GUI platform qualification.
+
 ## Engine configuration: fixed, not user-settable
 
 Neither published `KronOTP` class exposes configuration options, a constructor contract, an environment configuration interface or public mutation hooks.

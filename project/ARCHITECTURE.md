@@ -1,5 +1,19 @@
 # Architecture & Design Decisions
 
+## P04 consolidated qualification — 2026-11-28
+
+**Current status (2026-11-28):** P01–P03 closed; P04 qualification evidence verified and consolidation acceptance pending this documentation PR and final closeout. P05 final production/release acceptance has not started. Older dated statements below about deferred governance, unexecuted P04 tests or offline clone are historical, not current status. No new package release or application change.
+
+Current package metadata: Node CommonJS kron-otp 2.0.0, Python kron-otp 2.0.0. Both engines remain stateless synchronous six-digit SHA-1/30-second libraries, with a ±1-step verification window and boolean verify result. A successful verify does not identify the matched counter. Never infer the matched counter from the server's current counter. The relying party must bind the secret to an authenticated account/enrollment, protect it, synchronize trusted time, fail closed on clock anomalies, throttle per account and relevant abuse dimensions, atomically reserve an accepted code before granting authentication, and maintain replay state across replicas/restarts for the full acceptance horizon. Use appropriately protected replay storage; do not log secrets or OTPs. A conservative per-account code reservation spanning the full acceptance window plus boundary margin can reject coincidental equal codes from different counters. The synthetic fixtures use 120 seconds retention, 3 attempts/60 seconds and 8 concurrent requests; these are test parameters, not universal policy. They demonstrate single-process serialization, not distributed atomicity, durable storage or session issuance.
+
+The source-only GUI/DPAPI app is not a published library API. P04 adds only PR-triggered qualification workflows and test fixtures under qualification/, not application components. | Hosted environment | Node.js tested versions | Python tested versions |
+| --- | --- | --- |
+| Ubuntu 24.04 x64 | 20.19.0, 22.23.5, 24.22.3, 26.13.1 | 3.10.22, 3.11.18, 3.12.16, 3.13.18, 3.14.10, 3.15.2 |
+| Windows Server 2025 x64 | 20.19.0, 24.22.3 | 3.10.0, 3.10.11, 3.12.10 |
+| macOS 15 ARM64 | 20.19.0, 24.22.3 | 3.10.11, 3.12.10 |
+
+19 selected targets, 38 source/installed v2.0.0 suites passed in [46058729635](https://github.com/vibtoolshq/KronOTP/actions/runs/46058729635). Exact Python 3.10.0 on Ubuntu 24.04 was not tested; its lower-bound target was explicitly relocated to Windows. These are observed combinations, not an exhaustive Cartesian product or guarantee of every future patch, platform or dependency resolution. Declared floors remain Node >=20.19.0 and Python >=3.10.
+
 Verified against tracked source at baseline `50df7c42c0d1d83d21fe68097e0d70e46b0ef064` (2026-11-16). This is an **npm/PyPI library monorepo**. There is **no product UI, HTTP server, database, queue, background worker, persistent secret store, or application page** in the published libraries. GUI-02 extends the *source-only, standalone Tkinter Authenticator application* under `python/tests/gui/` with multi-account management and optional Windows DPAPI-encrypted storage; the app is NOT packaged in PyPI.
 
 ## Components and boundaries
@@ -16,7 +30,7 @@ The library does **not** discover or obtain shared secrets. The caller supplies 
 
 ## Node.js engine
 
-- Package: `javascript/package.json` — `kron-otp` version `1.0.0`, CommonJS; entry `src/kron-otp.js`, Node >=20.19.
+- Package: `javascript/package.json` — `kron-otp` version `2.0.0`, CommonJS; entry `src/kron-otp.js`, Node >=20.19.0.
 - Dependency: `otpauth@^9.6.0`; lockfile `javascript/package-lock.json` pins `otpauth@9.6.0` and `@noble/hashes@2.4.0` for repo installs.
 - P01 `KronOTP.#createTOTP` enforces ASCII Base32 normalization, raw <=4096 and compact <=1024 characters, >=14 decoded bytes and canonical round-trip before constructing SHA1/6/30 `OTPAuth.TOTP`; `verify` returns false for expected invalid input.
 - Static `generate` and `verify` methods are exported both as `module.exports = KronOTP` and `module.exports.KronOTP`.
