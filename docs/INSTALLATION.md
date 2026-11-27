@@ -5,6 +5,14 @@ order: 20
 draft: false
 ---
 
+## P04 consolidated qualification — 2026-11-28
+
+**Current status (2026-11-28):** P01–P03 closed; P04 qualification evidence verified and consolidation acceptance pending this documentation PR and final closeout. P05 final production/release acceptance has not started. Older dated statements below about deferred governance, unexecuted P04 tests or offline clone are historical, not current status. No new package release or application change.
+
+Production use should choose current security-patched upstream-supported runtimes, not merely the declared minimum. At 2026-11-28, the Node release information lists 22/24/26 LTS and 20 EOL; Python 3.10 reached its scheduled October 2026 EOL, while 3.11–3.15 are within their upstream support windows. Prefer a maintained Node LTS and maintained stable Python (e.g. 3.14 with current patches); verify the current lifecycle and OS/vendor patch availability before deployment. See [Node release status](https://nodejs.org/en/about/previous-releases) and [Python version status](https://devguide.python.org/versions/). The historical minimum-version tests do not recommend obsolete or unpatched runtime binaries.
+
+For actual selected runtime combinations see [Compatibility](./CONFIGURATION_AND_COMPATIBILITY.md). The official v2.0.0 tarball/wheel/sdist passed scoped digest/payload checks; the sdist contains the test module but lacks the shared vector JSON, so use a full repository checkout for source regressions. Do not claim bundled sdist tests pass. Install with exact package version, review resolved dependencies, and use current upstream security patches. No GUI bundled.
+
 ## Published packages (both v2.0.0)
 
 | Language | Runtime declaration | Package and dependency | Import |
