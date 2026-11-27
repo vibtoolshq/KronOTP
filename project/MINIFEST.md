@@ -16,3 +16,8 @@ Inventory of **all direct entries** of `project/` as of the 2026-11-28 baseline 
 | `BASELINE_FILE_INVENTORY_2026-11-28.md` | Markdown | 2026-11-28 Git tree inventory | All 51 pre-freeze source paths, blob SHAs, sizes and drift procedure |
 
 Update this index **in the same commit** whenever a direct entry changes. Never include `notes/` content here.
+
+
+## P04-S02-A01 runtime qualification — 2026-11-28
+
+No direct project/ inventory change; new repository workflow indexed in FILE_MAP.md and CI_AND_RELEASE.md. P04-S02/A01 adds `.github/workflows/p04-s02-compatibility.yml`, a PR-only compatibility qualification workflow. Eight Node and eleven Python targets (19 total) on Ubuntu 24.04 x64, Windows Server 2025 x64 and macOS 15 ARM64. Exact Python 3.10.0 is tested on Windows only; Ubuntu 3.10.x remains. Pinned actions, read-only contents permission, unchanged source tests and isolated npm/PyPI 2.0.0 consumer regressions; record runtime, dependencies, package origins and R-04 observations. Qualification acceptance is PENDING until actual dedicated CI and Required CI pass. No existing engine, dependency, workflow, governance or publishing changes.

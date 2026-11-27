@@ -1,0 +1,136 @@
+name: P04-S02 Compatibility Qualification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/p04-s02-compatibility.yml'
+permissions:
+  contents: read
+jobs:
+  node:
+    name: Node ${{ matrix.version }} / ${{ matrix.os }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, arch: x64, version: '20.19.0'}
+          - {os: ubuntu-24.04, arch: x64, version: '22.x'}
+          - {os: ubuntu-24.04, arch: x64, version: '24.x'}
+          - {os: ubuntu-24.04, arch: x64, version: '26.x'}
+          - {os: windows-2025, arch: x64, version: '20.19.0'}
+          - {os: windows-2025, arch: x64, version: '24.x'}
+          - {os: macos-15, arch: arm64, version: '20.19.0'}
+          - {os: macos-15, arch: arm64, version: '24.x'}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: ${{ matrix.version }}
+          architecture: ${{ matrix.arch }}
+          package-manager-cache: false
+      - name: Verify runtime and source suite
+        shell: pwsh
+        working-directory: javascript
+        env:
+          EXPECTED_VERSION: ${{ matrix.version }}
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          Write-Output "ImageOS=$env:ImageOS ImageVersion=$env:ImageVersion"
+          node -e 'const a=require("node:assert/strict"); const v=process.versions.node; const e=process.env.EXPECTED_VERSION; a(e.endsWith(".x") ? v.startsWith(e.slice(0,-1)) : v===e); a.equal(process.arch,process.env.EXPECTED_ARCH); console.log(JSON.stringify({node:v,os:process.platform,arch:process.arch,release:require("node:os").release()}));'
+          npm --version
+          npm ci --no-audit --no-fund --ignore-scripts
+          npm ls --all --json
+          node tests/test.js
+      - name: Isolated exact npm 2.0.0 consumer regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $root = Join-Path $env:RUNNER_TEMP 'kronotp-node-consumer'
+          New-Item -ItemType Directory -Path $root | Out-Null
+          $source = Get-Content (Join-Path $env:GITHUB_WORKSPACE 'javascript/tests/test.js') -Raw
+          $old = "require('../src/kron-otp')"
+          $vec = "require('../../python/tests/totp_vectors.json')"
+          if (($source.Split($old, [StringSplitOptions]::None).Count -ne 2) -or ($source.Split($vec, [StringSplitOptions]::None).Count -ne 2)) { throw 'Test import anchors changed' }
+          $source = $source.Replace($old, "require('kron-otp')").Replace($vec, "require('./totp_vectors.json')")
+          [IO.File]::WriteAllText((Join-Path $root 'test.cjs'), $source)
+          Copy-Item (Join-Path $env:GITHUB_WORKSPACE 'python/tests/totp_vectors.json') $root
+          Remove-Item Env:NODE_PATH -ErrorAction SilentlyContinue
+          Set-Location $root
+          npm init -y
+          npm install --save-exact --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org kron-otp@2.0.0
+          npm ls --all --json
+          npm view kron-otp@2.0.0 dist.integrity --registry=https://registry.npmjs.org
+          node -e 'const a=require("node:assert/strict"), p=require("node:path"), f=require("node:fs"); const m=require("kron-otp"), r=f.realpathSync(require.resolve("kron-otp")), base=f.realpathSync(p.join(process.cwd(),"node_modules","kron-otp")); a(r.startsWith(base+p.sep)); a.equal(m,m.KronOTP); a.equal(typeof m.generate,"function"); a.equal(typeof m.verify,"function"); const pkg=require(p.join(base,"package.json")); a.equal(pkg.version,"2.0.0"); const lock=require("./package-lock.json").packages["node_modules/kron-otp"]; a.equal(lock.version,"2.0.0"); a(lock.integrity); console.log(JSON.stringify({version:pkg.version,origin:r,integrity:lock.integrity}));'
+          node test.cjs
+  python:
+    name: Python ${{ matrix.version }} / ${{ matrix.os }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, arch: x64, version: '3.10'}
+          - {os: ubuntu-24.04, arch: x64, version: '3.11'}
+          - {os: ubuntu-24.04, arch: x64, version: '3.12'}
+          - {os: ubuntu-24.04, arch: x64, version: '3.13'}
+          - {os: ubuntu-24.04, arch: x64, version: '3.14'}
+          - {os: ubuntu-24.04, arch: x64, version: '3.15'}
+          - {os: windows-2025, arch: x64, version: '3.10'}
+          - {os: windows-2025, arch: x64, version: '3.12'}
+          - {os: windows-2025, arch: x64, version: '3.10.0'}
+          - {os: macos-15, arch: arm64, version: '3.10'}
+          - {os: macos-15, arch: arm64, version: '3.12'}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: ${{ matrix.version }}
+          architecture: ${{ matrix.arch }}
+      - name: Verify runtime and source suite
+        shell: pwsh
+        working-directory: python
+        env:
+          EXPECTED_VERSION: ${{ matrix.version }}
+          EXPECTED_ARCH: ${{ matrix.arch }}
+          PYTHONPATH: .
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          Write-Output "ImageOS=$env:ImageOS ImageVersion=$env:ImageVersion"
+          python -c 'import os,sys,platform,json; e=tuple(map(int,os.environ["EXPECTED_VERSION"].split("."))); assert tuple(sys.version_info[:len(e)])==e; assert sys.version_info.releaselevel=="final"; a=platform.machine().lower(); assert a in (("x86_64","amd64") if os.environ["EXPECTED_ARCH"]=="x64" else ("arm64","aarch64")); print(json.dumps({"python":sys.version,"os":platform.platform(),"arch":a}))'
+          python -m pip install --disable-pip-version-check --index-url https://pypi.org/simple -e .
+          python -m pip freeze
+          python tests/test_kron_otp.py
+          python -c 'from src.kron_otp import KronOTP; from unittest.mock import patch; import json; exec("with patch(\"pyotp.totp.time.time\",return_value=-1):\n try:\n  KronOTP.generate(\"GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ\")\n except Exception as e:\n  print(json.dumps({\"R-04\":type(e).__name__,\"message\":str(e)}))\n else:\n  print(json.dumps({\"R-04\":\"returned\"}))")'
+      - name: Isolated exact PyPI 2.0.0 consumer regression
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          Remove-Item Env:PYTHONPATH -ErrorAction SilentlyContinue
+          $root = Join-Path $env:RUNNER_TEMP 'kronotp-python-consumer'
+          New-Item -ItemType Directory -Path $root | Out-Null
+          $source = Get-Content (Join-Path $env:GITHUB_WORKSPACE 'python/tests/test_kron_otp.py') -Raw
+          $old = 'from src.kron_otp import KronOTP'
+          if ($source.Split($old,[StringSplitOptions]::None).Count -ne 2) { throw 'Test import anchor changed' }
+          [IO.File]::WriteAllText((Join-Path $root 'test_kron_otp.py'),$source.Replace($old,'from kron_otp import KronOTP'))
+          Copy-Item (Join-Path $env:GITHUB_WORKSPACE 'python/tests/totp_vectors.json') $root
+          Set-Location $root
+          python -m venv venv
+          $py = if ($IsWindows) { Join-Path $root 'venv/Scripts/python.exe' } else { Join-Path $root 'venv/bin/python' }
+          & $py -m pip install --disable-pip-version-check --index-url https://pypi.org/simple --upgrade pip
+          & $py -m pip install --disable-pip-version-check --index-url https://pypi.org/simple --report install.json kron-otp==2.0.0
+          & $py -m pip freeze
+          & $py -m pip check
+          & $py -I -c 'import sys,json,pathlib,importlib.metadata as m,kron_otp; p=pathlib.Path(kron_otp.__file__).resolve(); assert p.is_relative_to(pathlib.Path(sys.prefix).resolve()); assert m.version("kron-otp")=="2.0.0"; assert callable(kron_otp.KronOTP.generate) and callable(kron_otp.KronOTP.verify); report=json.loads(pathlib.Path("install.json").read_text()); a=[x for x in report["install"] if x["metadata"]["name"].lower().replace("_","-")=="kron-otp"]; assert len(a)==1; assert a[0]["download_info"]["archive_info"]["hashes"]["sha256"]; print(json.dumps({"version":m.version("kron-otp"),"origin":str(p),"artifact":a[0]["download_info"]}))'
+          & $py -I test_kron_otp.py
+          & $py -I -c 'from kron_otp import KronOTP; from unittest.mock import patch; import json; exec("with patch(\"pyotp.totp.time.time\",return_value=-1):\n try:\n  KronOTP.generate(\"GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ\")\n except Exception as e:\n  print(json.dumps({\"R-04\":type(e).__name__,\"message\":str(e)}))\n else:\n  print(json.dumps({\"R-04\":\"returned\"}))")'
