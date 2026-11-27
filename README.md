@@ -1,10 +1,21 @@
 # KronOTP
 
+## P05-A06 — consolidated acceptance (2026-11-28)
+
+**Decision:** scoped source and release-tooling qualification is accepted for release preparation; live v2.0.1 publication is **NO-GO** until release-specific mandatory preflight and separate authorization. P01–P04 and P05-A01–A05 scoped remediation are closed. P05-A06 documentation consolidation awaits its protected PR check and verified closeout; G12 final publication acceptance remains open. Published npm/PyPI packages are still 2.0.0. Historical candidate/blocked/OPEN statements below describe their respective checkpoints, not current source status. No source, version or publication change in this documentation update.
+
+Both confirmed source defects are fixed and verified. See [coverage and QA](./docs/COVERAGE_AND_QA.md) and [testing and releases](./docs/TESTING_AND_RELEASES.md) for detailed evidence and release-preflight.
+
+Release is conditional on current publisher credentials/policy, explicit residual-risk decision, exact-version package verification and separate tag authorization. The libraries remain stateless; caller authentication protections are required.
+
+
 ## P04 consolidated qualification — 2026-11-28
 
-**Current status (2026-11-28):** P01–P03 closed; P04 qualification evidence verified and consolidation acceptance pending this documentation PR and final closeout. P05 final production/release acceptance has not started. Older dated statements below about deferred governance, unexecuted P04 tests or offline clone are historical, not current status. No new package release or application change.
+**Historical P04 consolidation checkpoint:** P01–P03 were closed; P04 acceptance was pending at that checkpoint. P04 is now closed; see the current P05-A06 decision above.
 
-Published packages remain v2.0.0. | Hosted environment | Node.js tested versions | Python tested versions |
+Published packages remain v2.0.0.
+
+| Hosted environment | Node.js tested versions | Python tested versions |
 | --- | --- | --- |
 | Ubuntu 24.04 x64 | 20.19.0, 22.23.5, 24.22.3, 26.13.1 | 3.10.22, 3.11.18, 3.12.16, 3.13.18, 3.14.10, 3.15.2 |
 | Windows Server 2025 x64 | 20.19.0, 24.22.3 | 3.10.0, 3.10.11, 3.12.10 |
