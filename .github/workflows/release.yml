@@ -29,6 +29,10 @@ jobs:
   validate:
     name: Verify release and both packages
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.bundle.outputs.version }}
+      manifest_sha: ${{ steps.bundle.outputs.manifest_sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -49,6 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF_TYPE" == "tag" ]]; then
+            [[ "$GITHUB_RUN_ATTEMPT" == 1 ]] || { echo "::error::Release tag reruns are not allowed"; exit 1; }
             [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
               echo "::error::Expected a stable version tag such as v1.0.0"; exit 1;
             }
@@ -91,22 +96,6 @@ jobs:
         working-directory: javascript
         run: npm test
 
-      - name: Inspect npm publish payload
-        working-directory: javascript
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm pack --dry-run --json > "$RUNNER_TEMP/kronotp-npm-pack.json"
-          node - "$RUNNER_TEMP/kronotp-npm-pack.json" <<'NODE'
-          const fs = require('node:fs');
-          const item = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'))[0];
-          const files = new Set(item.files.map(entry => entry.path));
-          for (const required of ['src/kron-otp.js', 'README.md', 'LICENSE', 'package.json']) {
-            if (!files.has(required)) throw new Error('npm package missing: ' + required);
-          }
-          console.log('npm package payload validated:', item.files.length, 'files');
-          NODE
-
       - name: Install Python build and test dependencies
         run: python -m pip install --disable-pip-version-check -e ./python build twine
 
@@ -114,70 +103,194 @@ jobs:
         working-directory: python
         run: python -m unittest discover -s tests -v
 
-      - name: Build and verify Python distributions
-        working-directory: python
+      - name: Build immutable release bundle
+        id: bundle
+        run: python scripts/release/registry_contract.py build --bundle "$RUNNER_TEMP/kronotp-release-bundle"
+
+      - name: Smoke exact local wheel
         shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.bundle.outputs.version }}
         run: |
           set -euo pipefail
-          python -m build --outdir dist
-          python -m twine check dist/*
-          python -m pip install --no-deps --force-reinstall dist/*.whl
-          python - <<'PY'
-          from kron_otp import KronOTP
-          secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
-          token = KronOTP.generate(secret)
-          assert len(token) == 6 and KronOTP.verify(secret, token)
-          print("Installed Python wheel smoke test passed")
-          PY
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+          python -m venv "$RUNNER_TEMP/local-wheel"
+          "$RUNNER_TEMP/local-wheel/bin/python" -m pip install "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION-py3-none-any.whl"
+          "$RUNNER_TEMP/local-wheel/bin/python" -I -c 'from kron_otp import KronOTP; s="GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"; t=KronOTP.generate(s); assert len(t)==6 and KronOTP.verify(s,t)'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: kronotp-python-dist
-          path: python/dist/*
+          name: kronotp-release-bundle
+          path: ${{ runner.temp }}/kronotp-release-bundle/*
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 14
+          overwrite: false
+
+  preflight:
+    needs: validate
+    if: github.event_name == 'push' && github.ref_type == 'tag' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kronotp-release-bundle
+          path: ${{ runner.temp }}/kronotp-release-bundle
+      - name: Verify same-run artifact bundle and current main
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          MANIFEST_SHA: ${{ needs.validate.outputs.manifest_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag && "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" ]]
+          git fetch origin main --no-tags
+          [[ "$(git rev-parse FETCH_HEAD)" == "$GITHUB_SHA" ]]
+          python scripts/release/registry_contract.py publish-verify --main-sha "$(git rev-parse FETCH_HEAD)" --bundle "$RUNNER_TEMP/kronotp-release-bundle" --manifest-sha "$MANIFEST_SHA" --version "$RELEASE_VERSION"
+      - name: Require all three registry artifacts absent
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          MANIFEST_SHA: ${{ needs.validate.outputs.manifest_sha }}
+        run: python scripts/release/registry_contract.py preflight --bundle "$RUNNER_TEMP/kronotp-release-bundle" --manifest-sha "$MANIFEST_SHA" --version "$RELEASE_VERSION"
 
   npm:
     name: Publish npm
-    needs: validate
-    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [validate, preflight]
+    if: github.event_name == 'push' && github.ref_type == 'tag' && github.run_attempt == 1
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
-      - name: Publish to npm
-        working-directory: javascript
-        run: npm publish --ignore-scripts --access public
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kronotp-release-bundle
+          path: ${{ runner.temp }}/kronotp-release-bundle
+      - name: Verify same-run artifact bundle and current main
+        shell: bash
         env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          MANIFEST_SHA: ${{ needs.validate.outputs.manifest_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag && "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" ]]
+          git fetch origin main --no-tags
+          [[ "$(git rev-parse FETCH_HEAD)" == "$GITHUB_SHA" ]]
+          python scripts/release/registry_contract.py publish-verify --main-sha "$(git rev-parse FETCH_HEAD)" --bundle "$RUNNER_TEMP/kronotp-release-bundle" --manifest-sha "$MANIFEST_SHA" --version "$RELEASE_VERSION"
+      - name: Publish exact validated npm tarball
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$NODE_AUTH_TOKEN"
+          npm publish "$RUNNER_TEMP/kronotp-release-bundle/kron-otp-$RELEASE_VERSION.tgz" --ignore-scripts --access public --registry=https://registry.npmjs.org --fetch-retries=0
 
   pypi:
     name: Publish PyPI
-    needs: validate
-    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [validate, preflight]
+    if: github.event_name == 'push' && github.ref_type == 'tag' && github.run_attempt == 1
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 10
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          name: kronotp-python-dist
-          path: dist
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
           python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kronotp-release-bundle
+          path: ${{ runner.temp }}/kronotp-release-bundle
       - name: Install Twine
         run: python -m pip install --disable-pip-version-check twine
-      - name: Publish to PyPI
-        run: python -m twine upload --non-interactive dist/*
+      - name: Verify same-run artifact bundle and current main
+        shell: bash
         env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          MANIFEST_SHA: ${{ needs.validate.outputs.manifest_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag && "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          [[ "$GITHUB_REF" == "refs/tags/v$RELEASE_VERSION" ]]
+          git fetch origin main --no-tags
+          [[ "$(git rev-parse FETCH_HEAD)" == "$GITHUB_SHA" ]]
+          python scripts/release/registry_contract.py publish-verify --main-sha "$(git rev-parse FETCH_HEAD)" --bundle "$RUNNER_TEMP/kronotp-release-bundle" --manifest-sha "$MANIFEST_SHA" --version "$RELEASE_VERSION"
+      - name: Publish exact validated Python distributions
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$TWINE_PASSWORD"
+          # Twine upload has a built-in 5xx retry loop. Limit each file to one attempt.
+          python - "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION-py3-none-any.whl" "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION.tar.gz" <<'PY'
+          # BEGIN SINGLE_ATTEMPT_TWINE
+          import inspect
+          import sys
+          from requests.adapters import HTTPAdapter
+          from twine.cli import dispatch
+          from twine.repository import Repository
+          original = Repository.upload
+          if "max_redirects" not in inspect.signature(original).parameters:
+              raise RuntimeError("Unsupported Twine upload contract")
+          def single_attempt(self, package, max_redirects=1):
+              self.session.mount("https://", HTTPAdapter(max_retries=0))
+              return original(self, package, max_redirects=1)
+          Repository.upload = single_attempt
+          sys.exit(dispatch(["upload", "--non-interactive", "--repository-url",
+                             "https://upload.pypi.org/legacy/", *sys.argv[1:]]))
+          # END SINGLE_ATTEMPT_TWINE
+          PY
+
+  reconcile:
+    needs: [validate, preflight, npm, pypi]
+    if: always() && github.event_name == 'push' && github.ref_type == 'tag' && needs.validate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kronotp-release-bundle
+          path: ${{ runner.temp }}/kronotp-release-bundle
+      - name: Reconcile actual registry bytes after terminal publisher outcomes
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          MANIFEST_SHA: ${{ needs.validate.outputs.manifest_sha }}
+          PREFLIGHT_RESULT: ${{ needs.preflight.result }}
+          NPM_RESULT: ${{ needs.npm.result }}
+          PYPI_RESULT: ${{ needs.pypi.result }}
+        run: python scripts/release/registry_contract.py reconcile --bundle "$RUNNER_TEMP/kronotp-release-bundle" --manifest-sha "$MANIFEST_SHA" --version "$RELEASE_VERSION" --preflight-result "$PREFLIGHT_RESULT" --npm-result "$NPM_RESULT" --pypi-result "$PYPI_RESULT"
+
+  smoke:
+    needs: [validate, reconcile]
+    if: github.event_name == 'push' && github.ref_type == 'tag' && needs.reconcile.result == 'success'
+    uses: ./.github/workflows/registry-smoke.yml
+    with:
+      version: ${{ needs.validate.outputs.version }}
+      manifest_sha: ${{ needs.validate.outputs.manifest_sha }}

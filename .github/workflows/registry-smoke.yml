@@ -13,29 +13,43 @@ on:
         required: true
         type: string
 
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      manifest_sha:
+        required: true
+        type: string
+
 permissions:
   contents: read
 
 concurrency:
   group: kronotp-registry-smoke-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   resolve:
     name: Resolve and validate published version
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
       - name: Validate selected SemVer
         id: version
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
           REQUESTED_VERSION: ${{ inputs.version }}
+          MANIFEST_SHA: ${{ inputs.manifest_sha }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -49,7 +63,7 @@ jobs:
           py = tomllib.loads(pathlib.Path("python/pyproject.toml").read_text(encoding="utf-8"))
           if js["name"] != "kron-otp" or py["project"]["name"] != "kron-otp":
               raise SystemExit("Package name must remain kron-otp in both manifests")
-          if os.environ["EVENT_NAME"] == "workflow_dispatch":
+          if os.environ["EVENT_NAME"] == "workflow_dispatch" or os.environ.get("MANIFEST_SHA"):
               version = os.environ.get("REQUESTED_VERSION", "").strip()
           else:
               if js["version"] != py["project"]["version"]:
@@ -58,15 +72,43 @@ jobs:
 
           if re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version) is None:
               raise SystemExit("Refusing invalid version: expected numeric MAJOR.MINOR.PATCH only")
+          if os.environ.get("MANIFEST_SHA"):
+              assert os.environ["EVENT_NAME"] == "push" and os.environ["GITHUB_REF"] == "refs/tags/v" + version
+              assert version == js["version"] == py["version"]
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as result:
               result.write(f"version={version}\n")
           print(f"Selected public npm/PyPI version: {version}")
           PY
 
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: inputs.manifest_sha != ''
+        with:
+          name: kronotp-release-bundle
+          path: ${{ runner.temp }}/kronotp-release-bundle
+      - name: Fetch and verify all three public registry artifacts
+        shell: bash
+        env:
+          SMOKE_VERSION: ${{ steps.version.outputs.version }}
+          MANIFEST_SHA: ${{ inputs.manifest_sha }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$MANIFEST_SHA" ]]; then
+            python scripts/release/registry_contract.py smoke --version "$SMOKE_VERSION" --bundle "$RUNNER_TEMP/kronotp-release-bundle" --manifest-sha "$MANIFEST_SHA" --destination "$RUNNER_TEMP/verified-registry"
+          else
+            python scripts/release/registry_contract.py smoke --version "$SMOKE_VERSION" --destination "$RUNNER_TEMP/verified-registry"
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kronotp-verified-registry
+          path: ${{ runner.temp }}/verified-registry/*
+          if-no-files-found: error
+          retention-days: 3
+
   npm:
     name: npm - download, install, verify requested version
     needs: resolve
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       SMOKE_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
@@ -79,26 +121,17 @@ jobs:
           node-version: '24'
           package-manager-cache: false
 
-      - name: Download published npm tarball
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/npm-download"
-          npm pack "kron-otp@$SMOKE_VERSION" \
-            --pack-destination "$RUNNER_TEMP/npm-download" \
-            --registry=https://registry.npmjs.org \
-            --ignore-scripts \
-            --cache "$RUNNER_TEMP/npm-cache"
-          test -s "$RUNNER_TEMP/npm-download/kron-otp-$SMOKE_VERSION.tgz"
-          tar -tzf "$RUNNER_TEMP/npm-download/kron-otp-$SMOKE_VERSION.tgz" |
-            grep -Fx 'package/src/kron-otp.js'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kronotp-verified-registry
+          path: ${{ runner.temp }}/verified-registry
 
       - name: Install downloaded npm release in clean consumer environment
         shell: bash
         run: |
           set -euo pipefail
           npm install --prefix "$RUNNER_TEMP/npm-consumer" \
-            "$RUNNER_TEMP/npm-download/kron-otp-$SMOKE_VERSION.tgz" \
+            "$RUNNER_TEMP/verified-registry/kron-otp-$SMOKE_VERSION.tgz" \
             --registry=https://registry.npmjs.org \
             --cache "$RUNNER_TEMP/npm-cache" \
             --no-save --ignore-scripts --no-audit --no-fund
@@ -137,6 +170,7 @@ jobs:
     name: PyPI - download, install, verify requested version
     needs: resolve
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       SMOKE_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
@@ -148,16 +182,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Download published PyPI wheel
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/pypi-download"
-          python -m pip download "kron-otp==$SMOKE_VERSION" \
-            --index-url https://pypi.org/simple/ \
-            --no-cache-dir --no-deps --only-binary=:all: \
-            --dest "$RUNNER_TEMP/pypi-download"
-          test -s "$RUNNER_TEMP/pypi-download/kron_otp-$SMOKE_VERSION-py3-none-any.whl"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: kronotp-verified-registry
+          path: ${{ runner.temp }}/verified-registry
 
       - name: Install downloaded wheel in isolated Python environment
         shell: bash
@@ -167,12 +195,12 @@ jobs:
           "$RUNNER_TEMP/pypi-consumer/bin/python" -m pip install \
             --index-url https://pypi.org/simple/ \
             --no-cache-dir \
-            "$RUNNER_TEMP/pypi-download/kron_otp-$SMOKE_VERSION-py3-none-any.whl"
+            "$RUNNER_TEMP/verified-registry/kron_otp-$SMOKE_VERSION-py3-none-any.whl"
 
       - name: Test installed PyPI release
         shell: bash
         run: |
-          "$RUNNER_TEMP/pypi-consumer/bin/python" <<'PY'
+          "$RUNNER_TEMP/pypi-consumer/bin/python" -I <<'PY'
           import importlib.metadata
           import os
           import re
