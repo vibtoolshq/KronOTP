@@ -1,0 +1,225 @@
+name: P04-S03 Security and Distribution Qualification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/p04-s03-security.yml'
+permissions:
+  contents: read
+jobs:
+  npm-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Audit locked and installed consumer trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          date -u +%FT%TZ
+          node --version
+          npm --version
+          export npm_config_registry=https://registry.npmjs.org
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-npm.XXXXXX")"
+          cp -a javascript "$work/source"
+          mkdir "$work/consumer"
+          cd "$work/source"
+          npm ci --ignore-scripts --no-audit --no-fund
+          cd "$work/consumer"
+          npm init -y >/dev/null
+          npm install --save-exact --ignore-scripts --no-audit --no-fund kron-otp@2.0.0
+          node -e 'const a=require("node:assert/strict"); a.equal(require("./node_modules/kron-otp/package.json").version,"2.0.0");'
+          failed=0
+          for mode in source consumer; do
+            cd "$work/$mode"
+            echo "NPM_AUDIT_SCOPE=$mode"
+            npm ls --all --json
+            rc=0
+            npm audit --omit=dev --json > "$work/$mode.json" || rc=$?
+            cat "$work/$mode.json"
+            if ! node -e 'const a=require("node:assert/strict"),r=require(process.argv[1]); a.equal(r.auditReportVersion,2); a(!r.error); a(r.vulnerabilities && r.metadata && r.metadata.vulnerabilities); a.equal(r.metadata.vulnerabilities.total,0); a.equal(Object.keys(r.vulnerabilities).length,0);' "$work/$mode.json"; then failed=1; fi
+            if [[ "$rc" != 0 ]]; then failed=1; fi
+            echo "NPM_AUDIT_EXIT=$rc"
+          done
+          test "$failed" = 0
+  python-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Audit independent Python runtime closures
+        shell: bash
+        run: |
+          set -euo pipefail
+          date -u +%FT%TZ
+          python --version
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-py.XXXXXX")"
+          cp -a python "$work/source"
+          for mode in source consumer scanner; do python -m venv "$work/$mode-venv"; done
+          export PIP_INDEX_URL=https://pypi.org/simple
+          export PIP_DISABLE_PIP_VERSION_CHECK=1
+          "$work/scanner-venv/bin/python" -m pip install 'pip-audit==2.10.1'
+          "$work/scanner-venv/bin/pip-audit" --version
+          "$work/source-venv/bin/python" -m pip install -e "$work/source"
+          "$work/consumer-venv/bin/python" -m pip install 'kron-otp==2.0.0'
+          failed=0
+          for mode in source consumer; do
+            py="$work/$mode-venv/bin/python"
+            echo "PYTHON_AUDIT_SCOPE=$mode"
+            "$py" -m pip check
+            "$py" -m pip list --format=json > "$work/$mode-installed.json"
+            cat "$work/$mode-installed.json"
+            "$py" - "$work/$mode-installed.json" "$work/$mode.txt" "$mode" <<'PY'
+          import importlib.metadata as m, json, pathlib, sys
+          installed = {x["name"].lower().replace("_", "-"): x["version"] for x in json.loads(pathlib.Path(sys.argv[1]).read_text())}
+          assert installed["kron-otp"] == "2.0.0"
+          runtime = {k:v for k,v in installed.items() if k not in {"pip","setuptools","wheel"}}
+          assert set(runtime) == {"kron-otp","pyotp"}, "Unexpected runtime closure"
+          if sys.argv[3] == "source":
+              del runtime["kron-otp"]  # local project, not a third-party dependency
+          pathlib.Path(sys.argv[2]).write_text("".join(f"{k}=={v}\n" for k,v in sorted(runtime.items())))
+          PY
+            cat "$work/$mode.txt"
+            rc=0
+            "$work/scanner-venv/bin/pip-audit" --strict --no-deps --disable-pip --vulnerability-service pypi -r "$work/$mode.txt" --format json --output "$work/$mode-audit.json" || rc=$?
+            if [[ -s "$work/$mode-audit.json" ]]; then cat "$work/$mode-audit.json"; fi
+            if ! python - "$work/$mode-audit.json" "$work/$mode.txt" <<'PY'
+          import json, pathlib, sys
+          data=json.loads(pathlib.Path(sys.argv[1]).read_text())
+          expected=dict(line.split("==") for line in pathlib.Path(sys.argv[2]).read_text().splitlines())
+          deps=data["dependencies"]
+          assert {d["name"].lower().replace("_","-"):d["version"] for d in deps} == expected
+          assert all("vulns" in d and not d["vulns"] and not d.get("skip_reason") for d in deps)
+          PY
+            then failed=1; fi
+            if [[ "$rc" != 0 ]]; then failed=1; fi
+            echo "PYTHON_AUDIT_EXIT=$rc"
+          done
+          test "$failed" = 0
+  distribution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Verify exact released archives without extraction or execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin eefafd9934a44243879068d9b8081005e68aeade
+          python - <<'PY'
+          import base64, email, hashlib, io, json, pathlib, re, stat, subprocess, tarfile, urllib.request, urllib.error, urllib.parse, zipfile
+          release="eefafd9934a44243879068d9b8081005e68aeade"
+          def get(url, host):
+              p=urllib.parse.urlsplit(url)
+              assert p.scheme=="https" and p.hostname==host and not p.username and not p.password
+              with urllib.request.urlopen(url, timeout=30) as f:
+                  assert urllib.parse.urlsplit(f.geturl()).hostname==host
+                  b=f.read(2_000_001)
+              assert len(b)<=2_000_000
+              return b
+          def git(path):
+              return subprocess.check_output(["git","show",release+":"+path])
+          def valid_path(name):
+              assert name and not name.startswith("/") and "\\" not in name and ":" not in name
+              assert all(x not in ("",".","..") for x in name.rstrip("/").split("/"))
+          def archive(data, wheel=False):
+              entries={}
+              seen=set()
+              if wheel:
+                  with zipfile.ZipFile(io.BytesIO(data)) as z:
+                      for m in z.infolist():
+                          valid_path(m.filename)
+                          assert m.filename not in seen
+                          seen.add(m.filename)
+                          kind=stat.S_IFMT(m.external_attr>>16)
+                          assert kind in (0,stat.S_IFREG,stat.S_IFDIR)
+                          if m.is_dir(): continue
+                          assert m.file_size<=100_000
+                          entries[m.filename]=z.read(m)
+              else:
+                  with tarfile.open(fileobj=io.BytesIO(data),mode="r:gz") as t:
+                      for m in t:
+                          valid_path(m.name)
+                          assert m.name not in seen
+                          seen.add(m.name)
+                          if m.isdir(): continue
+                          assert m.isfile() and m.size<=100_000
+                          entries[m.name]=t.extractfile(m).read()
+              assert len(entries)<=40 and sum(map(len,entries.values()))<=500_000
+              # Known source files are compared with the pinned release. Generated
+              # metadata is additionally checked for obvious credential patterns.
+              for name, b in entries.items():
+                  assert not re.search(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|pypi-[A-Za-z0-9_-]{40,}|npm_[A-Za-z0-9]{30,}",b), "Credential pattern in archive"
+              return entries
+          def equal_source(entries, mapping):
+              for name,path in mapping.items():
+                  assert entries[name]==git(path), "Release source mismatch: "+name
+          def identity(b):
+              meta=email.message_from_bytes(b)
+              assert meta["Name"].lower().replace("_","-")=="kron-otp" and meta["Version"]=="2.0.0"
+          n=json.loads(get("https://registry.npmjs.org/kron-otp/2.0.0","registry.npmjs.org"))
+          assert n["name"]=="kron-otp" and n["version"]=="2.0.0" and n["gitHead"]==release
+          d=n["dist"]; b=get(d["tarball"],"registry.npmjs.org")
+          assert "sha512-"+base64.b64encode(hashlib.sha512(b).digest()).decode()==d["integrity"]
+          assert hashlib.sha1(b).hexdigest()==d["shasum"]
+          e=archive(b); expected={f"package/{p}":"javascript/"+p for p in ("src/kron-otp.js","README.md","LICENSE","package.json")}
+          assert set(e)==set(expected)
+          equal_source(e,expected)
+          p=json.loads(e["package/package.json"]); assert p["name"]=="kron-otp" and p["version"]=="2.0.0"
+          print(json.dumps({"archive":"npm","integrity":d["integrity"],"paths":sorted(e),"registry_signature_count":len(d.get("signatures",[])),"attestations_present":bool(d.get("attestations"))}))
+          p=json.loads(get("https://pypi.org/pypi/kron-otp/2.0.0/json","pypi.org"))
+          assert p["info"]["version"]=="2.0.0" and p["info"]["name"].lower().replace("_","-")=="kron-otp"
+          expected_files={"kron_otp-2.0.0-py3-none-any.whl":"bdist_wheel","kron_otp-2.0.0.tar.gz":"sdist"}
+          assert {x["filename"]:x["packagetype"] for x in p["urls"]}==expected_files
+          for item in p["urls"]:
+              name=item["filename"]; b=get(item["url"],"files.pythonhosted.org")
+              assert len(b)==item["size"] and hashlib.sha256(b).hexdigest()==item["digests"]["sha256"]
+              wheel=name.endswith(".whl"); e=archive(b,wheel)
+              if wheel:
+                  prefix="kron_otp-2.0.0.dist-info/"
+                  mapping={"kron_otp.py":"python/src/kron_otp.py",prefix+"licenses/LICENSE":"python/LICENSE"}
+                  allowed=set(mapping)|{prefix+x for x in ("METADATA","WHEEL","RECORD","top_level.txt")}
+                  assert set(e)==allowed
+                  identity(e[prefix+"METADATA"])
+                  # RECORD must account for each member, with correct SHA256/size.
+                  import csv
+                  rows=list(csv.reader(io.StringIO(e[prefix+"RECORD"].decode())))
+                  assert len(rows)==len(e) and {r[0] for r in rows}==set(e)
+                  for path,h,size in rows:
+                      if path==prefix+"RECORD": assert not h and not size; continue
+                      assert h=="sha256="+base64.urlsafe_b64encode(hashlib.sha256(e[path]).digest()).decode().rstrip("=")
+                      assert int(size)==len(e[path])
+              else:
+                  prefix="kron_otp-2.0.0/"
+                  mapping={prefix+x:"python/"+x for x in ("LICENSE","README.md","pyproject.toml","src/kron_otp.py")}
+                  optional={prefix+x:"python/"+x for x in ("src/__init__.py","tests/__init__.py","tests/test_kron_otp.py","tests/totp_vectors.json")}
+                  mapping.update({k:v for k,v in optional.items() if k in e})
+                  egg=prefix+"src/kron_otp.egg-info/"
+                  generated={prefix+"PKG-INFO",prefix+"setup.cfg"}|{egg+x for x in ("PKG-INFO","SOURCES.txt","dependency_links.txt","requires.txt","top_level.txt")}
+                  assert set(mapping)<=set(e)<=set(mapping)|generated
+                  identity(e[prefix+"PKG-INFO"]); identity(e[egg+"PKG-INFO"])
+              equal_source(e,mapping)
+              url="https://pypi.org/integrity/kron-otp/2.0.0/"+name+"/provenance"
+              try:
+                  prov=json.loads(get(url,"pypi.org")); status="present (not signature-verified)"
+              except urllib.error.HTTPError as ex:
+                  if ex.code!=404: raise
+                  status="not available (HTTP 404)"
+              print(json.dumps({"archive":name,"sha256":item["digests"]["sha256"],"paths":sorted(e),"provenance":status}))
+          print("DISTRIBUTION_INTEGRITY_PASS: three archives; exact release source checks and bounded credential-pattern scan; not publisher attestation")
+          PY
