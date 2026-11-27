@@ -1,0 +1,57 @@
+name: P04-S05 Performance and Stability Qualification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/p04-s05-performance.yml'
+      - 'qualification/p04-s05/**'
+permissions:
+  contents: read
+jobs:
+  node-performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Bounded Node performance and stability
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-node-perf.XXXXXX")"
+          cp qualification/p04-s05/benchmark.cjs "$work/"
+          cd "$work"
+          unset NODE_PATH NODE_OPTIONS
+          npm init -y >/dev/null
+          npm install --save-exact --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org kron-otp@2.0.0
+          npm ls --all --json
+          node -e 'const p=require("./package-lock.json").packages["node_modules/kron-otp"];if(p.version!=="2.0.0"||!p.integrity)process.exit(1);console.log(JSON.stringify({version:p.version,integrity:p.integrity}));'
+          node benchmark.cjs
+  python-performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Bounded Python performance and stability
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-python-perf.XXXXXX")"
+          cp qualification/p04-s05/benchmark.py "$work/"
+          cd "$work"
+          unset PYTHONPATH PYTHONOPTIMIZE
+          python -m venv venv
+          venv/bin/python -m pip install --disable-pip-version-check --index-url https://pypi.org/simple --report install.json kron-otp==2.0.0
+          venv/bin/python -m pip freeze
+          venv/bin/python -m pip check
+          venv/bin/python -I -c 'import json; r=json.load(open("install.json")); p=[x for x in r["install"] if x["metadata"]["name"].lower().replace("_","-")=="kron-otp"]; assert len(p)==1 and p[0]["metadata"]["version"]=="2.0.0" and p[0]["download_info"]["archive_info"]["hashes"]["sha256"]; print(json.dumps(p[0]["download_info"]))'
+          venv/bin/python -I benchmark.py
