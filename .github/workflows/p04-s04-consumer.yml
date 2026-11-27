@@ -1,0 +1,55 @@
+name: P04-S04 Consumer and Caller Security Qualification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/p04-s04-consumer.yml'
+      - 'qualification/p04-s04/**'
+permissions:
+  contents: read
+jobs:
+  node-consumer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Isolated published Node consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-node-consumer.XXXXXX")"
+          cp qualification/p04-s04/node-consumer.cjs "$work/"
+          cd "$work"
+          unset NODE_PATH
+          npm init -y >/dev/null
+          npm install --save-exact --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org kron-otp@2.0.0
+          npm ls --all --json
+          node node-consumer.cjs
+  python-consumer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Isolated published Python consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-python-consumer.XXXXXX")"
+          cp qualification/p04-s04/python_consumer.py "$work/"
+          cd "$work"
+          unset PYTHONPATH PYTHONOPTIMIZE
+          python -m venv venv
+          venv/bin/python -m pip install --disable-pip-version-check --index-url https://pypi.org/simple --report install.json kron-otp==2.0.0
+          venv/bin/python -m pip freeze
+          venv/bin/python -m pip check
+          venv/bin/python -I python_consumer.py
