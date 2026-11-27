@@ -73,3 +73,12 @@ The source CI workflow now runs on **every pull request** so a stable status exi
 - Source-independent download/clean install tests (Windows): npm `kron-otp-2.0.0.tgz` in temporary consumer **PASS**, Python `kron_otp-2.0.0-py3-none-any.whl` from official index in new venv **PASS**. Verified version/OTP generation/validation/input guardrails, plus Python epoch-29 case.
 - The dedicated *GitHub Actions* version-aware `registry-smoke.yml` was **not dispatched for 2.0.0** in this release; independent clean registry consumer tests were run instead. Do not claim that a 2.0.0 registry-smoke workflow run exists.
 - **Explicit one-time process exception:** GitHub main and v* tag protection absent/unverified and P04 cross-platform/security/stability acceptance incomplete. KO-007 and P04 are still open; historical v1.0.0 unmodified. No GitHub Release page (release object) was created by the existing workflow; tag and npm/PyPI packages were created successfully.
+
+
+## P03-GOV-01 governance enforcement — 2026-11-28
+
+On 2026-11-28 (Asia/Dhaka), P03-GOV-01 activated repository rulesets: main governance 28257893, v* tag creation 28257876 and v* tag immutability 28257888. API read-back verified active enforcement. Earlier statements that protection is unconfigured or blocked on administrator access describe the historical state, not the current settings.
+
+Main requires a pull request and strict up-to-date Required CI from GitHub Actions (app 15368), with zero independent approvals as explicitly approved for this single-maintainer repository. Main force-push and deletion are blocked; no main bypass actors. The tag-creation ruleset permits only the authorized individual user technicelnurnobi (85743335) to bypass the creation restriction. Separate tag immutability blocks updates and deletion with no bypass. This does not prevent a sufficiently authorized settings administrator from later changing the rules themselves.
+
+For a documentation-only PR, the existing Required CI aggregator must succeed; engine tests may legitimately skip. No workflow or release configuration files have changed. Configuration read-back passed; formal P03 acceptance remains conditional on this documentation PR passing Required CI and merging normally, final Git/local parity, unchanged historical tags, and recorded closeout evidence. No release tag, publish, deployment or destructive enforcement test is authorized by this phase. P04 and P05 remain outside scope; historical v2.0.0 publication is not full production acceptance.

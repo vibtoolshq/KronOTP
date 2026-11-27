@@ -109,3 +109,14 @@ Release [43867458691](https://github.com/vibtoolshq/KronOTP/actions/runs/4386745
 - Actual isolated Windows Python 3.12 PyPI v2 engine + Tk/DPAPI 8/8 tests PASS, including current-user encryption/decryption, no plaintext synthetic secret at rest, corruption handling, UI account lifecycle, unsupported otpauth URI formats, pending callback cleanup, timed code refresh and clipboard behavior. Tests performed with **synthetic RFC secret only**.
 - First run exposed Tcl queued-timer shutdown warnings; GUI-scope callback cancellation/normalization was patched and retested **without warnings**. GitHub engine Python/Required CI passed at [43906779325](https://github.com/vibtoolshq/KronOTP/actions/runs/43906779325).
 - Remaining non-tested items: hostile same-user malware, secure memory zeroization, restore from Windows profile corruption, full manually reviewed GUI appearance/keyboard accessibility at all scaling factors, non-Windows encrypted persistence (deliberately disabled), independent vulnerability/penetration test and external authentication provider acceptance. No production security certification asserted.
+
+
+## P03-GOV-01 governance enforcement — 2026-11-28
+
+On 2026-11-28 (Asia/Dhaka), P03-GOV-01 activated repository rulesets: main governance 28257893, v* tag creation 28257876 and v* tag immutability 28257888. API read-back verified active enforcement. Earlier statements that protection is unconfigured or blocked on administrator access describe the historical state, not the current settings.
+
+KO-007: configuration remediation verified; formal closure pending the PR and final acceptance below. KO-009/011/012 and broader production qualification are unaffected.
+
+Main requires a pull request and strict up-to-date Required CI from GitHub Actions (app 15368), with zero independent approvals as explicitly approved for this single-maintainer repository. Main force-push and deletion are blocked; no main bypass actors. The tag-creation ruleset permits only the authorized individual user technicelnurnobi (85743335) to bypass the creation restriction. Separate tag immutability blocks updates and deletion with no bypass. This does not prevent a sufficiently authorized settings administrator from later changing the rules themselves.
+
+Configuration read-back passed; formal P03 acceptance remains conditional on this documentation PR passing Required CI and merging normally, final Git/local parity, unchanged historical tags, and recorded closeout evidence. No release tag, publish, deployment or destructive enforcement test is authorized by this phase. P04 and P05 remain outside scope; historical v2.0.0 publication is not full production acceptance.

@@ -100,3 +100,12 @@ The checklist below evaluates the staged Git tree against the frozen JSON Schema
 - This update records resolved verification/synchronization blockers; the earlier "offline" record was a historical statement, not the current status. The **actual live developer-portal ingestion/build has not been confirmed**. As inspected, Vib Docs Engine's separate `config/projects.json` and `config/presets/dev-portal/projects.json` do not list KronOTP; registering it is a separate repository action outside this scope. Do not describe the public site as already serving KronOTP.
 
 No package build, new release/tag, secrets, external portal registry mutation, or source-code change occurred in this verification.
+
+
+## P03-GOV-01 governance enforcement — 2026-11-28
+
+On 2026-11-28 (Asia/Dhaka), P03-GOV-01 activated repository rulesets: main governance 28257893, v* tag creation 28257876 and v* tag immutability 28257888. API read-back verified active enforcement. Earlier statements that protection is unconfigured or blocked on administrator access describe the historical state, not the current settings.
+
+Main requires a pull request and strict up-to-date Required CI from GitHub Actions (app 15368), with zero independent approvals as explicitly approved for this single-maintainer repository. Main force-push and deletion are blocked; no main bypass actors. The tag-creation ruleset permits only the authorized individual user technicelnurnobi (85743335) to bypass the creation restriction. Separate tag immutability blocks updates and deletion with no bypass. This does not prevent a sufficiently authorized settings administrator from later changing the rules themselves.
+
+Governance configuration verification is separate from runtime and security qualification. Configuration read-back passed; formal P03 acceptance remains conditional on this documentation PR passing Required CI and merging normally, final Git/local parity, unchanged historical tags, and recorded closeout evidence. No release tag, publish, deployment or destructive enforcement test is authorized by this phase. P04 and P05 remain outside scope; historical v2.0.0 publication is not full production acceptance.
