@@ -1,5 +1,11 @@
 # Engine Function-Level Technical Reference
 
+## P05-A01 — Python generation diagnostic correction (source candidate)
+
+This change is limited to Python `KronOTP.generate()`: validate and construct the TOTP before reading the clock, sample `time.time()` once, reject any negative Unix timestamp (including fractional pre-epoch time) with `ValueError("Invalid system clock: TOTP requires a non-negative Unix timestamp.")`, then generate with `totp.at(snapshot)`. Expected construction errors retain the existing sanitized invalid-secret `ValueError`; expected generation-stage errors use `ValueError("TOTP generation failed.")`. Invalid secret takes precedence. No new public parameter, exception class, dependency, algorithm or change to `verify()`.
+
+Source candidate only; acceptance requires the actual protected PR CI and verified closeout. Published PyPI 2.0.0 and npm 2.0.0 remain unchanged; PyPI v2 retains the historical negative-clock misclassification. Do not assume installing v2 delivers this source fix. P05 final release acceptance remains NO-GO.
+
 Verified against `javascript/src/kron-otp.js` and `python/src/kron_otp.py` on development `main` after P02 (frozen baseline `b4192dc`). Published `1.0.0` packages retain their historical input contracts. Methods listed are **existing** methods, not planned APIs.
 
 ## JavaScript: `javascript/src/kron-otp.js`
@@ -24,7 +30,7 @@ Errors: `generate` rejects missing/non-string, malformed, <14-byte or oversized 
 | `class KronOTP` | Public import | Class | Stateless static-method facade |
 | `@staticmethod _normalize_secret(secret: str) -> str` | Internal | Base32 string → normalized unpadded Base32 | Rejects non-string/invalid characters, normalizes ASCII whitespace via `re.sub`/uppercase, rejects non-ASCII before uppercasing; checks raw/compact limits and >=14 decoded bytes; validates canonical encoding by Base32 decode/re-encode |
 | `@staticmethod _totp(secret: str) -> pyotp.TOTP` | Internal | Base32 string → configured TOTP | Calls normalization, configures digits=6, interval=30, digest=SHA1; both wrapper and PyOTP enforce >=14 decoded bytes |
-| `@staticmethod generate(secret: str) -> str` | Public | Base32 string → six-character string | Invokes `.now()`; translates expected invalid-secret exceptions to `ValueError` |
+| `@staticmethod generate(secret: str) -> str` | Public | Base32 string → six-character string | Validates secret first; samples time once; rejects negative Unix timestamps; invokes `.at(snapshot)` with distinct generation-stage `ValueError` |
 | `@staticmethod verify(secret: str, token: str) -> bool` | Public | Base32 string, token → boolean | Returns false for expected invalid input/mismatch; samples clock once; at Unix counter 0 compares only valid counters 0/+1 using PyOTP `valid_window=0`; otherwise uses original PyOTP `valid_window=1` |
 
 `python/src/__init__.py` is empty and is not the exposed PyPI module; `pyproject.toml` uses `py-modules = ["kron_otp"]` with package dir `src`.

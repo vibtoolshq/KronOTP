@@ -75,11 +75,19 @@ class KronOTP:
 
     @staticmethod
     def generate(secret: str) -> str:
-        """Return a six-digit code; raise ValueError for an invalid secret."""
+        """Return a six-digit code; raise ValueError for invalid input or clock."""
         try:
-            return KronOTP._totp(secret).now()
+            totp = KronOTP._totp(secret)
         except (TypeError, ValueError, binascii.Error):
             raise ValueError(_INVALID_SECRET) from None
+
+        now = time.time()
+        if now < 0:
+            raise ValueError("Invalid system clock: TOTP requires a non-negative Unix timestamp.")
+        try:
+            return totp.at(now)
+        except (TypeError, ValueError, binascii.Error):
+            raise ValueError("TOTP generation failed.") from None
 
     @staticmethod
     def verify(secret: str, token: str) -> bool:

@@ -5,6 +5,14 @@ order: 110
 draft: false
 ---
 
+## P05-A01 — Python generation diagnostic correction (source candidate)
+
+This change is limited to Python `KronOTP.generate()`: validate and construct the TOTP before reading the clock, sample `time.time()` once, reject any negative Unix timestamp (including fractional pre-epoch time) with `ValueError("Invalid system clock: TOTP requires a non-negative Unix timestamp.")`, then generate with `totp.at(snapshot)`. Expected construction errors retain the existing sanitized invalid-secret `ValueError`; expected generation-stage errors use `ValueError("TOTP generation failed.")`. Invalid secret takes precedence. No new public parameter, exception class, dependency, algorithm or change to `verify()`.
+
+Source candidate only; acceptance requires the actual protected PR CI and verified closeout. Published PyPI 2.0.0 and npm 2.0.0 remain unchanged; PyPI v2 retains the historical negative-clock misclassification. Do not assume installing v2 delivers this source fix. P05 final release acceptance remains NO-GO.
+
+If the clock is pre-epoch, restore a trusted synchronized system time; do not regenerate or disclose the shared secret. Invalid inputs retain the original sanitized error. Catch ValueError and fail closed.
+
 ## First isolate package/runtime issues
 
 | Observation | Where to check | Code-grounded explanation |
