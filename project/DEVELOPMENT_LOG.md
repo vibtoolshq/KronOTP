@@ -1,11 +1,29 @@
 # Verified Development & Phase Log
 
-## v2.0.1 release candidate — 2026-11-28
+## v2.0.1 verified release — 2026-11-28
+
+**Current release status: published and verified on both npm and PyPI.** [npm 2.0.1](https://www.npmjs.com/package/kron-otp/v/2.0.1) and [PyPI 2.0.1](https://pypi.org/project/kron-otp/2.0.1/) are the latest versions at verification. This status supersedes the earlier candidate and NO-GO checkpoints below. P05/G12 release-specific acceptance is GO via the approved recovery route; documentation closeout requires its own protected PR and final parity.
+
+- Install: `npm install kron-otp@2.0.1` or `pip install kron-otp==2.0.1`. Python negative-clock diagnostics and the sdist vector fixture are corrected; runtime API, algorithm, dependency ranges and engine behavior otherwise unchanged.
+- Immutable annotated unsigned [v2.0.1 tag](https://github.com/vibtoolshq/KronOTP/tree/v2.0.1) points to `c732cae0e58fe7e21bc0160f3814dc99d27990d1`. Qualification [46082157882](https://github.com/vibtoolshq/KronOTP/actions/runs/46082157882): 50 locked tools, three byte-identical artifacts, eight marker fixtures and five advisory graphs with zero reported vulnerabilities/zero Python skips at scan time; required regressions and main nonpublishing validation passed.
+- Original [release run 46082457680](https://github.com/vibtoolshq/KronOTP/actions/runs/46082457680) remains FAILURE, attempt 1: validation, preflight, npm and PyPI publisher jobs succeeded; immediate reconciliation observed npm absent, so automatic smoke was skipped. npm registry records publication at 2026-11-27 23:29:04 UTC, after the publisher success at 23:26:58 and failed reconciliation at 23:27:22. Delayed public visibility is established; internal registry cause is not independently established. No republish or rerun occurred.
+- Independent public downloads at 23:35:13 UTC and approved [nonpublishing recovery smoke 46083365483](https://github.com/vibtoolshq/KronOTP/actions/runs/46083365483) matched all three original artifact SHA-256 digests and registry metadata. Recovery smoke 3/3 jobs PASS, both installed exact-version consumers PASS, source JS 86 vectors and Python 13/13 PASS. This is recovery acceptance, not retroactive automatic-smoke success.
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| npm tarball | 3188 | `3b963d59cd7d1600f0be5dfd114f88baf9ad4ec5b24a810e9a6da2a76dda31c9` |
+| Python wheel | 5074 | `74ee3702e467bb8d3659162632d0d88c93c1120f0da9c9f136777dfc4553cc2e` |
+| Python sdist | 7452 | `70f240af3ab525ae6ba9aaeb9ab64582af79aa567bb06685b761fb30c4562231` |
+
+Original release bundle [15237494004](https://github.com/vibtoolshq/KronOTP/actions/runs/46082457680/artifacts/15237494004), manifest SHA-256 `ec91d48e0a40d88030b608b81695c93be755a597e426383f58e23c3339047df3`. Preserve the historical failure. Release workflow remains unchanged; future releases need separately approved bounded read-only registry visibility reconciliation to avoid premature partial status (no automatic upload retry). Existing token-based publishing, shared credentials, unsigned tag and absent/unverified provenance were explicitly accepted for v2.0.1 only. No cryptographic publisher identity proof, universal runtime compatibility, future vulnerability guarantee, production capacity SLA or distributed authentication assurance. Historical GUI verification remains on v2.0.0. Caller must provide secure secret storage, clock, throttling and atomic replay prevention.
+
+
+## Historical v2.0.1 release candidate — 2026-11-28
 
 Source npm and PyPI manifests and npm root lock metadata target 2.0.1; runtime dependency ranges and resolved npm dependency entries are unchanged. The release-specific owner decision retains existing organization tokens and accepts shared-credential, unsigned-tag and provenance limitations for this release only. Current public registry policy must permit direct publication; stop on rejection. Exact-version PR qualification, fresh advisory scans, protected merge and main nonpublishing release validation are required before the authorized stable tag. Until actual publication and automatic registry smoke are verified, public npm/PyPI installation examples remain 2.0.0 and G12 remains open. No claim of published 2.0.1 at this candidate checkpoint.
 
 
-## P05-A06 — consolidated acceptance (2026-11-28)
+## Historical P05-A06 — consolidated acceptance (2026-11-28)
 
 **Decision:** scoped source and release-tooling qualification is accepted for release preparation; live v2.0.1 publication is **NO-GO** until release-specific mandatory preflight and separate authorization. P01–P04 and P05-A01–A05 scoped remediation are closed. P05-A06 documentation consolidation awaits its protected PR check and verified closeout; G12 final publication acceptance remains open. Published npm/PyPI packages are still 2.0.0. Historical candidate/blocked/OPEN statements below describe their respective checkpoints, not current source status. No source, version or publication change in this documentation update.
 
@@ -42,7 +60,7 @@ Four new targeted unittest methods cover negative/fractional pre-epoch times, in
 
 Source candidate only; acceptance requires the actual protected PR CI and verified closeout. Published PyPI 2.0.0 and npm 2.0.0 remain unchanged; PyPI v2 retains the historical negative-clock misclassification. Do not assume installing v2 delivers this source fix. P05 final release acceptance remains NO-GO.
 
-## P04 consolidated qualification — 2026-11-28
+## Historical P04 consolidated qualification — 2026-11-28
 
 **Historical P04 consolidation checkpoint:** P01–P03 were closed; P04 acceptance was pending at that checkpoint. P04 is now closed; see the current P05-A06 decision above.
 
