@@ -4,12 +4,15 @@ import base64
 import csv
 import email
 import hashlib
+import gzip
+import importlib.metadata
 import io
 import json
 import os
 from pathlib import Path, PurePosixPath
 import re
 import stat
+import sys
 import subprocess
 import tarfile
 import tempfile
@@ -119,7 +122,46 @@ def inspect_wheel(data,v,source):
         else:
             require(d=="sha256="+base64.urlsafe_b64encode(hashlib.sha256(f[name]).digest()).decode().rstrip("=") and int(s)==len(f[name]),"RECORD mismatch")
 
+def verify_toolchain():
+    require(sys.version_info[:3]==(3,12,16),"controlled Python version")
+    require(sys.platform=="linux" and os.uname().machine=="x86_64","controlled platform")
+    expected={}
+    for line in Path("scripts/release/requirements-build.lock").read_text().splitlines():
+        if line and not line.startswith("#"):
+            name,version=line.split()[0].split("==")
+            expected[name]=version
+    actual={re.sub(r"[-_.]+","-",d.metadata["Name"].lower()):d.version
+            for d in importlib.metadata.distributions()}
+    require(len(expected)==50 and actual==expected,"locked tool graph mismatch")
+    subprocess.run([sys.executable,"-m","pip","check"],check=True)
+    print(json.dumps({"LOCKED_TOOLCHAIN":actual},sort_keys=True))
+
+def canonical_sdist(path,root,files,epoch):
+    """Normalize archive headers/order, preserving every validated member byte."""
+    dirs={root}
+    for name in files:
+        dirs.update(str(p) for p in PurePosixPath(root,name).parents if str(p)!=".")
+    with path.open("wb") as raw:
+        with gzip.GzipFile(filename="",mode="wb",fileobj=raw,mtime=epoch,compresslevel=9) as compressed:
+            with tarfile.open(fileobj=compressed,mode="w",format=tarfile.PAX_FORMAT) as t:
+                for name in sorted(dirs):
+                    info=tarfile.TarInfo(name); info.type=tarfile.DIRTYPE
+                    info.mode=0o755; info.mtime=epoch
+                    t.addfile(info)
+                for name,body in sorted(files.items()):
+                    info=tarfile.TarInfo(root+"/"+name)
+                    info.mode=0o644; info.mtime=epoch; info.size=len(body)
+                    t.addfile(info,io.BytesIO(body))
+
 def build(bundle):
+    verify_toolchain()
+    require(subprocess.check_output(["node","--version"],text=True).strip()=="v24.22.3","controlled Node version")
+    require(subprocess.check_output(["npm","--version"],text=True).strip()=="11.19.1","controlled npm version")
+    epoch=int(subprocess.check_output(["git","show","-s","--format=%ct","HEAD"],text=True).strip())
+    require(315532800<=epoch<4354819200,"archive timestamp range")
+    env={**os.environ,"SOURCE_DATE_EPOCH":str(epoch),"PYTHONHASHSEED":"0","TZ":"UTC","LC_ALL":"C.UTF-8","PIP_NO_INDEX":"1"}
+    os.umask(0o022)
+    print("SOURCE_DATE_EPOCH="+str(epoch))
     v=source_version()
     b=binding(v)
     require(subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()==b["sha"],"checkout SHA")
@@ -130,20 +172,22 @@ def build(bundle):
         archive=subprocess.check_output(["git","archive","HEAD","javascript","python"])
         with tarfile.open(fileobj=io.BytesIO(archive)) as t:
             t.extractall(src,filter="data")
-        subprocess.run(["npm","pack","--ignore-scripts","--pack-destination",str(bundle)],cwd=src/"javascript",check=True)
+        subprocess.run(["npm","pack","--ignore-scripts","--pack-destination",str(bundle)],cwd=src/"javascript",check=True,env=env)
         allowed={"src/kron-otp.js","README.md","LICENSE","package.json"}
         f=tar_files(read_file(bundle/npm),"package",allowed,allowed)
         require(all(f[p]==(src/"javascript"/p).read_bytes() for p in allowed),"npm source mismatch")
         js=json.loads(f["package.json"])
         require(js["name"]==PACKAGE and js["version"]==v,"npm identity")
-        subprocess.run(["python","-m","build","--sdist","--outdir",str(bundle),str(src/"python")],check=True)
+        subprocess.run([sys.executable,"-m","build","--no-isolation","--sdist","--outdir",str(bundle),str(src/"python")],check=True,env=env)
         f=inspect_sdist(read_file(bundle/sdist),v,src/"python")
+        canonical_sdist(bundle/sdist,"kron_otp-"+v,f,epoch)
+        require(inspect_sdist(read_file(bundle/sdist),v,src/"python")==f,"canonical sdist content drift")
         extracted=Path(tmp)/"sdist"; extracted.mkdir()
         for p,data in f.items():
-            dest=extracted/p; dest.parent.mkdir(parents=True,exist_ok=True); dest.write_bytes(data)
-        subprocess.run(["python","-m","build","--wheel","--outdir",str(bundle),str(extracted)],check=True)
+            dest=extracted/p; dest.parent.mkdir(parents=True,exist_ok=True); dest.write_bytes(data); os.chmod(dest,0o644); os.utime(dest,(epoch,epoch))
+        subprocess.run([sys.executable,"-m","build","--no-isolation","--wheel","--outdir",str(bundle),str(extracted)],check=True,env=env)
         inspect_wheel(read_file(bundle/wheel),v,src/"python")
-        subprocess.run(["python","-m","twine","check","--strict",str(bundle/wheel),str(bundle/sdist)],check=True)
+        subprocess.run([sys.executable,"-m","twine","check","--strict",str(bundle/wheel),str(bundle/sdist)],check=True,env=env)
     require({p.name for p in bundle.iterdir()}==set(names(v)),"bundle file set")
     m={"schema":1,"binding":b,"files":{n:digest(read_file(bundle/n)) for n in names(v)}}
     raw=json.dumps(m,sort_keys=True,separators=(",",":")).encode()

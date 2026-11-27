@@ -12,6 +12,8 @@ on:
       - 'javascript/package-lock.json'
       - 'javascript/README.md'
       - 'javascript/LICENSE'
+      - 'scripts/release/requirements-build.lock'
+      - 'scripts/release/registry_contract.py'
       - 'python/pyproject.toml'
       - 'python/README.md'
       - 'python/LICENSE'
@@ -28,7 +30,7 @@ concurrency:
 jobs:
   validate:
     name: Verify release and both packages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
       version: ${{ steps.bundle.outputs.version }}
@@ -41,12 +43,12 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: '24'
+          node-version: '24.22.3'
           package-manager-cache: false
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
-          python-version: '3.12'
+          python-version: '3.12.16'
 
       - name: Verify tag, package versions, and release files
         shell: bash
@@ -96,16 +98,33 @@ jobs:
         working-directory: javascript
         run: npm test
 
-      - name: Install Python build and test dependencies
-        run: python -m pip install --disable-pip-version-check -e ./python build twine
+      - name: Install hash-locked release tooling in isolated venv
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/release-tools"
+          "$RUNNER_TEMP/release-tools/bin/python" -m pip --isolated install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r scripts/release/requirements-build.lock
+          "$RUNNER_TEMP/release-tools/bin/python" -m pip check
+          "$RUNNER_TEMP/release-tools/bin/python" -c 'from scripts.release.registry_contract import verify_toolchain; verify_toolchain()'
+      - name: Install declared runtime dependencies in separate source venv
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/source-env"
+          python - <<'PY'
+          import pathlib, tomllib, subprocess, os
+          deps=tomllib.loads(pathlib.Path("python/pyproject.toml").read_text())["project"]["dependencies"]
+          subprocess.run([os.environ["RUNNER_TEMP"]+"/source-env/bin/python","-m","pip","--isolated","install","--index-url","https://pypi.org/simple","--only-binary=:all:",*deps],check=True)
+          PY
+          "$RUNNER_TEMP/source-env/bin/python" -m pip check
 
       - name: Test Python engine
         working-directory: python
-        run: python -m unittest discover -s tests -v
+        run: '"$RUNNER_TEMP/source-env/bin/python" -m unittest discover -s tests -v'
 
       - name: Build immutable release bundle
         id: bundle
-        run: python scripts/release/registry_contract.py build --bundle "$RUNNER_TEMP/kronotp-release-bundle"
+        run: '"$RUNNER_TEMP/release-tools/bin/python" scripts/release/registry_contract.py build --bundle "$RUNNER_TEMP/kronotp-release-bundle"'
 
       - name: Smoke exact local wheel
         shell: bash
@@ -127,7 +146,7 @@ jobs:
   preflight:
     needs: validate
     if: github.event_name == 'push' && github.ref_type == 'tag' && github.run_attempt == 1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -135,7 +154,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
-          python-version: '3.12'
+          python-version: '3.12.16'
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: kronotp-release-bundle
@@ -162,7 +181,7 @@ jobs:
     name: Publish npm
     needs: [validate, preflight]
     if: github.event_name == 'push' && github.ref_type == 'tag' && github.run_attempt == 1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -170,10 +189,10 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
-          python-version: '3.12'
+          python-version: '3.12.16'
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          node-version: '24'
+          node-version: '24.22.3'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
@@ -206,7 +225,7 @@ jobs:
     name: Publish PyPI
     needs: [validate, preflight]
     if: github.event_name == 'push' && github.ref_type == 'tag' && github.run_attempt == 1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -214,13 +233,19 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
-          python-version: '3.12'
+          python-version: '3.12.16'
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: kronotp-release-bundle
           path: ${{ runner.temp }}/kronotp-release-bundle
-      - name: Install Twine
-        run: python -m pip install --disable-pip-version-check twine
+      - name: Install hash-locked release tooling in isolated venv
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/release-tools"
+          "$RUNNER_TEMP/release-tools/bin/python" -m pip --isolated install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r scripts/release/requirements-build.lock
+          "$RUNNER_TEMP/release-tools/bin/python" -m pip check
+          "$RUNNER_TEMP/release-tools/bin/python" -c 'from scripts.release.registry_contract import verify_toolchain; verify_toolchain()'
       - name: Verify same-run artifact bundle and current main
         shell: bash
         env:
@@ -243,7 +268,7 @@ jobs:
           set -euo pipefail
           test -n "$TWINE_PASSWORD"
           # Twine upload has a built-in 5xx retry loop. Limit each file to one attempt.
-          python - "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION-py3-none-any.whl" "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION.tar.gz" <<'PY'
+          "$RUNNER_TEMP/release-tools/bin/python" - "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION-py3-none-any.whl" "$RUNNER_TEMP/kronotp-release-bundle/kron_otp-$RELEASE_VERSION.tar.gz" <<'PY'
           # BEGIN SINGLE_ATTEMPT_TWINE
           import inspect
           import sys
@@ -265,7 +290,7 @@ jobs:
   reconcile:
     needs: [validate, preflight, npm, pypi]
     if: always() && github.event_name == 'push' && github.ref_type == 'tag' && needs.validate.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -273,7 +298,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
-          python-version: '3.12'
+          python-version: '3.12.16'
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: kronotp-release-bundle
