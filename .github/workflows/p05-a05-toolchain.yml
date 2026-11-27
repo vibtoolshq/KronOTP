@@ -2,6 +2,9 @@ name: P05-A05 Toolchain and Dependency Qualification
 on:
   pull_request:
     paths:
+      - 'javascript/package.json'
+      - 'javascript/package-lock.json'
+      - 'python/pyproject.toml'
       - 'scripts/release/requirements-build.lock'
       - 'scripts/release/registry_contract.py'
       - '.github/workflows/release.yml'
