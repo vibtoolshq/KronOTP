@@ -117,3 +117,8 @@ Uninstalling the Python **package** does not necessarily delete the separate GUI
 The published v1.0.0 remains a historical artifact. v2.0.0 changes JavaScript `verify` behavior for expected invalid secrets from throwing to returning false, disallows weak short Base32 keys in both languages, and includes the Python epoch counter fix. Upgrade compatible applications deliberately; no implicit migration of account secrets occurs.
 
 [API reference](./API_REFERENCE.md) · [Compatibility](./CONFIGURATION_AND_COMPATIBILITY.md) · [Testing](./TESTING_AND_RELEASES.md)
+
+
+## P05-A02 — source distribution completeness (2026-11-28)
+
+`python/MANIFEST.in` explicitly includes `tests/totp_vectors.json` in future Python source distributions. `.github/workflows/p05-sdist.yml` qualifies candidate sdist and wheel built from that sdist, strict archive paths/source bytes/metadata/RECORD, twine check, and separate 13-method source and installed-wheel regressions with all 86 shared vectors. The wheel consumer adapts only import/mock paths in a disposable copy. No runtime fixture or GUI in the wheel; no engine, dependency, version, existing workflow or publishing change. Build tools are resolved in an isolated CI environment and recorded, not a reproducibility lock. Qualification acceptance pending actual CI and verified closeout. Historical published v2.0.0 sdist remains incomplete and published v2 does not contain the R-04 source fix; no new release.

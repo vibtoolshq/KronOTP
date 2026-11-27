@@ -1,0 +1,157 @@
+name: P05-A02 Python sdist qualification
+on:
+  pull_request:
+    paths:
+      - 'python/MANIFEST.in'
+      - '.github/workflows/p05-sdist.yml'
+permissions:
+  contents: read
+jobs:
+  packaging:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Build and verify candidate distributions and isolated regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH PYTHONOPTIMIZE
+          export PIP_INDEX_URL=https://pypi.org/simple
+          export PIP_DISABLE_PIP_VERSION_CHECK=1
+          work="$(mktemp -d "$RUNNER_TEMP/kronotp-sdist.XXXXXX")"
+          export WORK="$work"
+          git rev-parse HEAD
+          python --version
+          mkdir "$work/input" "$work/dist" "$work/extracted" "$work/consumer"
+          git archive HEAD:python | tar -x -C "$work/input"
+          python -m venv "$work/build-env"
+          tool="$work/build-env/bin/python"
+          "$tool" -m pip install build twine 'setuptools>=77' wheel
+          "$tool" -m pip freeze --all
+          "$tool" -m build --sdist --no-isolation --outdir "$work/dist" "$work/input"
+          python - <<'PY'
+          import email, hashlib, json, os, pathlib, tarfile
+          w=pathlib.Path(os.environ["WORK"])
+          root="kron_otp-2.0.0"
+          archive=w/"dist"/(root+".tar.gz")
+          assert list((w/"dist").iterdir())==[archive]
+          assert archive.stat().st_size<=2_000_000
+          source={"LICENSE","README.md","pyproject.toml","MANIFEST.in","src/kron_otp.py",
+                  "tests/test_kron_otp.py","tests/totp_vectors.json"}
+          optional={"src/__init__.py","tests/__init__.py"}
+          egg="src/kron_otp.egg-info/"
+          generated={"PKG-INFO","setup.cfg"}|{egg+x for x in ("PKG-INFO","SOURCES.txt","dependency_links.txt","requires.txt","top_level.txt")}
+          allowed=source|optional|generated
+          dirs={root}
+          for p in allowed:
+              dirs.update(str(x) for x in pathlib.PurePosixPath(root,p).parents if str(x)!=".")
+          files={};seen=set()
+          with tarfile.open(archive,"r:gz") as t:
+              for m in t:
+                  p=pathlib.PurePosixPath(m.name)
+                  assert m.name not in seen and not p.is_absolute() and ".." not in p.parts and "\\" not in m.name
+                  seen.add(m.name)
+                  if m.isdir():
+                      assert m.name in dirs
+                      continue
+                  assert m.isfile() and 0<=m.size<=100_000 and p.parts[0]==root
+                  rel=str(pathlib.PurePosixPath(*p.parts[1:]))
+                  assert rel in allowed
+                  files[rel]=t.extractfile(m).read()
+                  assert len(files)<=40 and sum(map(len,files.values()))<=500_000
+          assert source<=set(files)<=allowed
+          for name in source|(optional&files.keys()):
+              assert files[name]==(w/"input"/name).read_bytes(), name
+          for name in ("PKG-INFO",egg+"PKG-INFO"):
+              meta=email.message_from_bytes(files[name])
+              assert meta["Name"]=="kron-otp" and meta["Version"]=="2.0.0"
+              assert meta["Requires-Python"]==">=3.10"
+          vectors=json.loads(files["tests/totp_vectors.json"])
+          assert len(vectors["rfc6238_sha1_6digits"])==6 and len(vectors["cross_language"])==80
+          for name,data in files.items():
+              dest=w/"extracted"/root/name
+              dest.parent.mkdir(parents=True,exist_ok=True)
+              dest.write_bytes(data)
+          print(json.dumps({"SDIST_PASS":sorted(files),"sha256":hashlib.sha256(archive.read_bytes()).hexdigest(),
+              "vector_sha256":hashlib.sha256(files["tests/totp_vectors.json"]).hexdigest(),"vectors":86}))
+          PY
+          extracted="$work/extracted/kron_otp-2.0.0"
+          "$tool" -m build --wheel --no-isolation --outdir "$work/dist" "$extracted"
+          "$tool" -m twine check --strict "$work/dist/"*
+          python - <<'PY'
+          import base64,csv,email,hashlib,io,json,os,pathlib,stat,zipfile
+          w=pathlib.Path(os.environ["WORK"])
+          wheel=w/"dist/kron_otp-2.0.0-py3-none-any.whl"
+          assert set(p.name for p in (w/"dist").iterdir())=={wheel.name,"kron_otp-2.0.0.tar.gz"}
+          assert wheel.stat().st_size<=2_000_000
+          prefix="kron_otp-2.0.0.dist-info/"
+          allowed={"kron_otp.py",prefix+"licenses/LICENSE"}|{prefix+x for x in ("METADATA","WHEEL","RECORD","top_level.txt")}
+          with zipfile.ZipFile(wheel) as z:
+              infos=z.infolist()
+              assert len(infos)==len(allowed) and set(x.filename for x in infos)==allowed
+              assert all(not x.is_dir() and stat.S_IFMT(x.external_attr>>16) in (0,stat.S_IFREG) and x.file_size<=100_000 for x in infos)
+              files={x.filename:z.read(x) for x in infos}
+          assert files["kron_otp.py"]==(w/"input/src/kron_otp.py").read_bytes()
+          assert files[prefix+"licenses/LICENSE"]==(w/"input/LICENSE").read_bytes()
+          meta=email.message_from_bytes(files[prefix+"METADATA"])
+          assert meta["Name"]=="kron-otp" and meta["Version"]=="2.0.0" and meta["Requires-Python"]==">=3.10"
+          rows=list(csv.reader(io.StringIO(files[prefix+"RECORD"].decode())))
+          assert len(rows)==len(files) and {r[0] for r in rows}==allowed
+          for name,digest,size in rows:
+              if name==prefix+"RECORD":
+                  assert not digest and not size
+              else:
+                  assert digest=="sha256="+base64.urlsafe_b64encode(hashlib.sha256(files[name]).digest()).decode().rstrip("=")
+                  assert int(size)==len(files[name])
+          print(json.dumps({"WHEEL_PASS":sorted(files),"sha256":hashlib.sha256(wheel.read_bytes()).hexdigest(),"record_entries":len(rows)}))
+          PY
+          python -m venv "$work/source-env"
+          "$work/source-env/bin/python" -m pip install "$extracted"
+          "$work/source-env/bin/python" -m pip check
+          "$work/source-env/bin/python" -m pip freeze
+          cd "$extracted"
+          "$work/source-env/bin/python" - <<'PY'
+          import pathlib,unittest
+          from src import kron_otp
+          assert pathlib.Path(kron_otp.__file__).resolve()==pathlib.Path("src/kron_otp.py").resolve()
+          suite=unittest.defaultTestLoader.discover("tests",pattern="test_kron_otp.py")
+          assert suite.countTestCases()==13
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and result.testsRun==13 and not result.skipped
+          print("SDIST_SOURCE_REGRESSION_PASS=13/13; vectors=86")
+          PY
+          python -m venv "$work/wheel-env"
+          "$work/wheel-env/bin/python" -m pip install "$work/dist/kron_otp-2.0.0-py3-none-any.whl"
+          "$work/wheel-env/bin/python" -m pip check
+          "$work/wheel-env/bin/python" -m pip freeze
+          cd "$work/consumer"
+          python - <<'PY'
+          import pathlib,os,shutil
+          w=pathlib.Path(os.environ["WORK"])
+          tests=w/"extracted/kron_otp-2.0.0/tests"
+          c=pathlib.Path("tests");c.mkdir()
+          text=(tests/"test_kron_otp.py").read_text()
+          assert text.count("from src.kron_otp import KronOTP")==1
+          assert text.count("src.kron_otp.time.time")==4
+          text=text.replace("from src.kron_otp import KronOTP","from kron_otp import KronOTP").replace("src.kron_otp.time.time","kron_otp.time.time")
+          (c/"test_kron_otp.py").write_text(text)
+          shutil.copyfile(tests/"totp_vectors.json",c/"totp_vectors.json")
+          PY
+          "$work/wheel-env/bin/python" -I - <<'PY'
+          import importlib.metadata,pathlib,sys,unittest
+          import kron_otp
+          assert importlib.metadata.version("kron-otp")=="2.0.0"
+          assert pathlib.Path(kron_otp.__file__).resolve().is_relative_to(pathlib.Path(sys.prefix).resolve())
+          print("WHEEL_IMPORT_ORIGIN="+kron_otp.__file__)
+          suite=unittest.defaultTestLoader.discover("tests",pattern="test_kron_otp.py")
+          assert suite.countTestCases()==13
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          assert result.wasSuccessful() and result.testsRun==13 and not result.skipped
+          print("WHEEL_REGRESSION_PASS=13/13; vectors=86")
+          PY
