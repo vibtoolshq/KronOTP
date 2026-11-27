@@ -306,3 +306,12 @@ A maintainer explicitly authorized v2.0.0 before GitHub branch/tag governance co
 - Playwright, Puppeteer and Selenium are **external optional consumer frameworks** used by example applications, not dependencies of KronOTP. The example selectors, login URL, credentials and expected 2FA page belong to the consumer's own authorized test environment; sample scripts must be adapted there.
 - Browser automation examples require an **already-provisioned Base32 TOTP secret**; no extraction, bypass, account registration, remote-login API or token vault is provided by the library. Keep server-side replay prevention and rate limits in the integrating application.
 - Maintainer tag publication is handled by `.github/workflows/release.yml` after an authorized new `vX.Y.Z` tag push matching the current main HEAD and both package versions; branch/tag protection rules remain a separately deferred governance action. See [updated testing and release reference](./TESTING_AND_RELEASES.md), [developer setup](./DEVELOPMENT_AND_CONTRIBUTING.md) and [public API](./API_REFERENCE.md).
+
+
+## P03-GOV-01 governance enforcement — 2026-11-28
+
+On 2026-11-28 (Asia/Dhaka), P03-GOV-01 activated repository rulesets: main governance 28257893, v* tag creation 28257876 and v* tag immutability 28257888. API read-back verified active enforcement. Earlier statements that protection is unconfigured or blocked on administrator access describe the historical state, not the current settings.
+
+Main requires a pull request and strict up-to-date Required CI from GitHub Actions (app 15368), with zero independent approvals as explicitly approved for this single-maintainer repository. Main force-push and deletion are blocked; no main bypass actors. The tag-creation ruleset permits only the authorized individual user technicelnurnobi (85743335) to bypass the creation restriction. Separate tag immutability blocks updates and deletion with no bypass. This does not prevent a sufficiently authorized settings administrator from later changing the rules themselves.
+
+Use the protected PR path for main; publication still requires a separately approved tag action. Configuration read-back passed; formal P03 acceptance remains conditional on this documentation PR passing Required CI and merging normally, final Git/local parity, unchanged historical tags, and recorded closeout evidence. No release tag, publish, deployment or destructive enforcement test is authorized by this phase. P04 and P05 remain outside scope; historical v2.0.0 publication is not full production acceptance.
