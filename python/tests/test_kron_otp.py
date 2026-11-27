@@ -102,6 +102,42 @@ class KronOTPTests(unittest.TestCase):
                 self.assertEqual(self._at(t, key), expected)
                 self.assertTrue(self._verify_at(t, key, expected))
 
+    def test_generate_negative_clock_diagnostic(self) -> None:
+        for timestamp in (-30, -1, -0.001):
+            with self.subTest(timestamp=timestamp):
+                with mock.patch("src.kron_otp.time.time", return_value=timestamp):
+                    with self.assertRaisesRegex(
+                        ValueError, r"^Invalid system clock: TOTP requires a non-negative Unix timestamp\.$"
+                    ):
+                        KronOTP.generate(self.SECRET)
+
+    def test_generate_invalid_secret_diagnostic_precedence(self) -> None:
+        for timestamp in (-1, 59):
+            for secret in (None, "not-base32!", self.BELOW13):
+                with self.subTest(timestamp=timestamp, secret=secret):
+                    with mock.patch("src.kron_otp.time.time", return_value=timestamp) as clock:
+                        with self.assertRaisesRegex(
+                            ValueError, r"^Invalid TOTP secret: expected valid Base32 of an accepted size\.$"
+                        ):
+                            KronOTP.generate(secret)
+                        clock.assert_not_called()
+
+    def test_generate_epoch_reference_and_single_clock_read(self) -> None:
+        # Public RFC 4226 HOTP counters 0 and 1; TOTP step is 30 seconds.
+        for timestamp, expected in ((0, "755224"), (0.001, "755224"),
+                                    (29.999, "755224"), (30, "287082"), (59, "287082")):
+            with self.subTest(timestamp=timestamp):
+                with mock.patch("src.kron_otp.time.time", return_value=timestamp) as clock:
+                    self.assertEqual(KronOTP.generate(self.SECRET), expected)
+                    clock.assert_called_once_with()
+
+    def test_generate_dependency_error_is_not_secret_error(self) -> None:
+        with mock.patch("src.kron_otp.time.time", return_value=59):
+            with mock.patch("pyotp.TOTP.at", side_effect=ValueError("internal diagnostic")):
+                with self.assertRaisesRegex(ValueError, r"^TOTP generation failed\.$") as error:
+                    KronOTP.generate(self.SECRET)
+                self.assertTrue(error.exception.__suppress_context__)
+
     def test_epoch_and_drift_boundaries(self) -> None:
         current = self._at(29, self.SECRET)
         next_token = self._at(30, self.SECRET)

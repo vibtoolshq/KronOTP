@@ -1,5 +1,13 @@
 # Verified Development & Phase Log
 
+## P05-A01 — Python generation diagnostic correction (source candidate)
+
+Approved baseline 4ad8438445238ce98c7a99f30f63a5ec1ca69eef. Exact eight tracked files: Python generate only, additive core tests and six scoped maintainer/user Markdown documents. This change is limited to Python `KronOTP.generate()`: validate and construct the TOTP before reading the clock, sample `time.time()` once, reject any negative Unix timestamp (including fractional pre-epoch time) with `ValueError("Invalid system clock: TOTP requires a non-negative Unix timestamp.")`, then generate with `totp.at(snapshot)`. Expected construction errors retain the existing sanitized invalid-secret `ValueError`; expected generation-stage errors use `ValueError("TOTP generation failed.")`. Invalid secret takes precedence. No new public parameter, exception class, dependency, algorithm or change to `verify()`.
+
+Four new targeted unittest methods cover negative/fractional pre-epoch times, invalid-secret precedence, independent counter 0/1 references with one clock read, and sanitized dependency-generation ValueError. The nine original methods, six RFC and 80 shared vectors are retained (13 methods proposed total). No fresh cross-platform/GUI/published consumer test is implied.
+
+Source candidate only; acceptance requires the actual protected PR CI and verified closeout. Published PyPI 2.0.0 and npm 2.0.0 remain unchanged; PyPI v2 retains the historical negative-clock misclassification. Do not assume installing v2 delivers this source fix. P05 final release acceptance remains NO-GO.
+
 ## P04 consolidated qualification — 2026-11-28
 
 **Current status (2026-11-28):** P01–P03 closed; P04 qualification evidence verified and consolidation acceptance pending this documentation PR and final closeout. P05 final production/release acceptance has not started. Older dated statements below about deferred governance, unexecuted P04 tests or offline clone are historical, not current status. No new package release or application change.
