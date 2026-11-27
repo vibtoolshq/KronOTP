@@ -64,3 +64,8 @@ The above is a map, not a claim that engine-level APIs, pages, buttons or databa
 ## DEVDOCS-01 forensic documentation inventory (2026-11-19)
 
 The Git-tracked `docs/` folder now includes a **flat developer documentation suite**, not product UI implementation. `docs/index.md` is the portal root; `docs/MANIFEST.md` is the exact canonical inventory, stripped by Vib Docs Engine. The legacy `docs/MINIFEST.md` typo and duplicate root `docs/README.md` were removed to avoid orphaned portal routes. Public engine interfaces remain solely the two static `KronOTP` operations per language. No application-source, package or workflow change is made by this documentation phase.
+
+
+## P04-S02-A01 runtime qualification — 2026-11-28
+
+P04-S02/A01 adds `.github/workflows/p04-s02-compatibility.yml`, a PR-only compatibility qualification workflow. Eight Node and eleven Python targets (19 total) on Ubuntu 24.04 x64, Windows Server 2025 x64 and macOS 15 ARM64. Exact Python 3.10.0 is tested on Windows only; Ubuntu 3.10.x remains. Pinned actions, read-only contents permission, unchanged source tests and isolated npm/PyPI 2.0.0 consumer regressions; record runtime, dependencies, package origins and R-04 observations. Qualification acceptance is PENDING until actual dedicated CI and Required CI pass. No existing engine, dependency, workflow, governance or publishing changes.
