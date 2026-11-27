@@ -1,0 +1,109 @@
+name: P05-A05 Toolchain and Dependency Qualification
+on:
+  pull_request:
+    paths:
+      - 'scripts/release/requirements-build.lock'
+      - 'scripts/release/registry_contract.py'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/p05-a04-release-contract.yml'
+      - '.github/workflows/p05-a05-toolchain.yml'
+permissions:
+  contents: read
+jobs:
+  toolchain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12.16'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24.22.3'
+          package-manager-cache: false
+      - name: Two independent locked builds and exact artifact comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset PYTHONPATH PYTHONOPTIMIZE
+          export PIP_DISABLE_PIP_VERSION_CHECK=1
+          node --version; npm --version; python --version
+          for id in first second; do
+            python -m venv "$RUNNER_TEMP/$id-tools"
+            tool="$RUNNER_TEMP/$id-tools/bin/python"
+            "$tool" -m pip --isolated install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r scripts/release/requirements-build.lock
+            "$tool" -m pip check
+            "$tool" scripts/release/registry_contract.py build --bundle "$RUNNER_TEMP/$id-bundle"
+            sha="$(sha256sum "$RUNNER_TEMP/$id-bundle/manifest.json" | cut -d' ' -f1)"
+            "$tool" scripts/release/registry_contract.py verify --bundle "$RUNNER_TEMP/$id-bundle" --manifest-sha "$sha"
+          done
+          python - <<'PY'
+          import json,os,pathlib
+          w=pathlib.Path(os.environ["RUNNER_TEMP"])
+          a=w/"first-bundle"; b=w/"second-bundle"
+          m=json.loads((a/"manifest.json").read_text())
+          assert (a/"manifest.json").read_bytes()==(b/"manifest.json").read_bytes()
+          for n,d in sorted(m["files"].items()):
+              assert (a/n).read_bytes()==(b/n).read_bytes(),n
+              print("REPRODUCIBLE",n,d["sha256"],d["size"])
+          assert len(m["files"])==3
+          print("THREE_ARTIFACT_BYTE_REPRODUCIBILITY_PASS")
+          PY
+      - name: Fresh exact runtime and tooling advisory audits
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PIP_INDEX_URL=https://pypi.org/simple
+          work="$RUNNER_TEMP"
+          scanner="$work/first-tools/bin/python"
+          version="$(python -c 'from scripts.release.registry_contract import source_version; print(source_version())')"
+          echo "AUDIT_UTC=$(date -u +%FT%TZ)"
+          npm ci --prefix javascript --ignore-scripts --no-audit --no-fund
+          (cd javascript; npm ls --all --json; npm audit --omit=dev --json --registry=https://registry.npmjs.org > "$work/npm-source.json")
+          mkdir "$work/npm-consumer"
+          printf '{"name":"kronotp-qualification-consumer","version":"1.0.0","private":true}\n' > "$work/npm-consumer/package.json"
+          npm install --prefix "$work/npm-consumer" "$work/first-bundle/kron-otp-$version.tgz" --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org
+          (cd "$work/npm-consumer"; npm ls --all --json; npm audit --omit=dev --json --registry=https://registry.npmjs.org > "$work/npm-consumer.json")
+          "$scanner" -m pip list --format=freeze > "$work/tools.txt"
+          "$scanner" -m pip_audit --strict --no-deps --disable-pip -r "$work/tools.txt" --format json --output "$work/tools-audit.json"
+          source="$work/second-tools/bin/python"
+          "$source" -m pip --isolated install --index-url https://pypi.org/simple --no-build-isolation --only-binary=:all: -e ./python
+          "$source" -m pip check
+          python -m venv "$work/consumer-env"
+          consumer="$work/consumer-env/bin/python"
+          "$consumer" -m pip --isolated install --index-url https://pypi.org/simple --only-binary=:all: "$work/first-bundle/kron_otp-$version-py3-none-any.whl"
+          "$consumer" -m pip check
+          for mode in source consumer; do
+            if [[ "$mode" == source ]]; then exe="$source"; else exe="$consumer"; fi
+            "$exe" -I - "$work/$mode.txt" "$version" <<'PY'
+          import importlib.metadata as md,pathlib,sys
+          from kron_otp import KronOTP
+          assert md.version("kron-otp")==sys.argv[2]
+          d=md.distribution("kron-otp")
+          assert len(d.requires)==1 and d.requires[0].lower().startswith("pyotp")
+          p=md.distribution("pyotp")
+          assert not p.requires
+          secret="GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
+          assert KronOTP.verify(secret,KronOTP.generate(secret))
+          pathlib.Path(sys.argv[1]).write_text("pyotp=="+p.version+"\n")
+          print("RUNTIME_GRAPH",d.version,p.version)
+          PY
+            "$scanner" -m pip_audit --strict --no-deps --disable-pip -r "$work/$mode.txt" --format json --output "$work/$mode-audit.json"
+          done
+          python - <<'PY'
+          import json,os,pathlib
+          w=pathlib.Path(os.environ["RUNNER_TEMP"])
+          for n in ("npm-source","npm-consumer"):
+              a=json.loads((w/(n+".json")).read_text())
+              assert not a.get("error") and a["metadata"]["vulnerabilities"]["total"]==0 and not a["vulnerabilities"]
+              print(n,json.dumps(a["metadata"],sort_keys=True))
+          for n,count in (("tools",50),("source",1),("consumer",1)):
+              a=json.loads((w/(n+"-audit.json")).read_text())
+              rows=a["dependencies"]
+              assert len(rows)==count and all(not x.get("skip_reason") and x.get("vulns")==[] for x in rows)
+              print(n,json.dumps(rows,sort_keys=True))
+          print("FIVE_ADVISORY_GRAPHS_PASS")
+          PY
