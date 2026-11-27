@@ -76,34 +76,99 @@ jobs:
           consumer="$work/consumer-env/bin/python"
           "$consumer" -m pip --isolated install --index-url https://pypi.org/simple --only-binary=:all: "$work/first-bundle/kron_otp-$version-py3-none-any.whl"
           "$consumer" -m pip check
+          cat > "$work/runtime-contract.py" <<'PY'
+          import json,pathlib,sys
+          from packaging.requirements import Requirement
+          from packaging.markers import default_environment
+          from packaging.utils import canonicalize_name
+          from packaging.version import Version
+
+          def active(items,env):
+              parsed=[Requirement(x) for x in items or []]
+              return [r for r in parsed if r.marker is None or r.marker.evaluate(environment=env)]
+
+          def validate(graph,expected_version,env):
+              assert graph["root"]["version"]==expected_version,"root version mismatch"
+              root=active(graph["root"]["requires"],env)
+              assert len(root)==1 and canonicalize_name(root[0].name)=="pyotp",f"unexpected active root dependencies: {root}"
+              req=root[0]
+              assert not req.extras and req.url is None,"unexpected PyOTP extras/direct URL"
+              assert req.specifier.contains(Version(graph["pyotp"]["version"]),prereleases=True),"installed PyOTP outside declared range"
+              transitive=active(graph["pyotp"]["requires"],env)
+              assert not transitive,f"unexpected active PyOTP dependencies: {transitive}"
+              return {"pyotp":graph["pyotp"]["version"]}
+
+          env={**default_environment(),"extra":""}
+          fixture={"root":{"version":"2.0.0","requires":["PyOTP>=2.12,<3"]},
+                   "pyotp":{"version":"2.12.2","requires":[f'{n}; extra == "test"' for n in ("coverage","mypy","ruff","wheel")]}}
+          assert validate(fixture,"2.0.0",env)=={"pyotp":"2.12.2"}
+          assert active(['coverage; extra == "test"'],{**env,"extra":"test"})
+          for marker in ('extra == "test" or python_version >= "3.12"','python_version >= "3.12"'):
+              assert active(["unexpected; "+marker],env)
+          bad=[
+              {**fixture,"pyotp":{**fixture["pyotp"],"requires":["unexpected"]}},
+              {**fixture,"pyotp":{**fixture["pyotp"],"requires":['unexpected; extra == "test" or python_version >= "3.12"']}},
+              {**fixture,"root":{**fixture["root"],"requires":["PyOTP>=2.12,<3","unexpected"]}},
+              {**fixture,"root":{**fixture["root"],"requires":["PyOTP[test]>=2.12,<3"]}},
+              {**fixture,"root":{**fixture["root"],"requires":["PyOTP @ https://example.invalid/pkg.whl"]}},
+              {**fixture,"pyotp":{**fixture["pyotp"],"version":"3.0.0"}},
+              {**fixture,"root":{**fixture["root"],"requires":['PyOTP; extra == "test"']}},
+          ]
+          for item in bad:
+              try:
+                  validate(item,"2.0.0",env)
+              except AssertionError:
+                  pass
+              else:
+                  raise AssertionError("negative runtime fixture accepted")
+          if len(sys.argv)==1:
+              print("MARKER_FIXTURES_PASS=1 positive / 7 negative")
+          else:
+              graph=json.loads(pathlib.Path(sys.argv[1]).read_text())
+              assert graph["environment"]=={k:env[k] for k in graph["environment"]},"marker environment mismatch"
+              resolved=validate(graph,sys.argv[2],env)
+              pathlib.Path(sys.argv[3]).write_text("".join(f"{n}=={v}\n" for n,v in sorted(resolved.items())))
+              print("RUNTIME_GRAPH",json.dumps({"root":graph["root"],"pyotp":graph["pyotp"],"active":resolved},sort_keys=True))
+          PY
+          "$scanner" -I "$work/runtime-contract.py"
           for mode in source consumer; do
             if [[ "$mode" == source ]]; then exe="$source"; else exe="$consumer"; fi
-            "$exe" -I - "$work/$mode.txt" "$version" <<'PY'
-          import importlib.metadata as md,pathlib,sys
+            "$exe" -I - "$work/$mode-metadata.json" "$version" <<'PY'
+          import importlib.metadata as md,json,pathlib,sys,os,platform
           from kron_otp import KronOTP
-          assert md.version("kron-otp")==sys.argv[2]
           d=md.distribution("kron-otp")
-          assert len(d.requires)==1 and d.requires[0].lower().startswith("pyotp")
           p=md.distribution("pyotp")
-          assert not p.requires
+          assert d.version==sys.argv[2]
           secret="GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
           assert KronOTP.verify(secret,KronOTP.generate(secret))
-          pathlib.Path(sys.argv[1]).write_text("pyotp=="+p.version+"\n")
-          print("RUNTIME_GRAPH",d.version,p.version)
+          env={"implementation_name":sys.implementation.name,"os_name":os.name,
+               "platform_machine":platform.machine(),"platform_release":platform.release(),
+               "platform_system":platform.system(),"platform_version":platform.version(),
+               "python_full_version":platform.python_version(),
+               "platform_python_implementation":platform.python_implementation(),
+               "python_version":".".join(platform.python_version_tuple()[:2]),"sys_platform":sys.platform}
+          graph={"root":{"version":d.version,"requires":d.requires or []},
+                 "pyotp":{"version":p.version,"requires":p.requires or []},"environment":env}
+          pathlib.Path(sys.argv[1]).write_text(json.dumps(graph,sort_keys=True))
           PY
+            "$scanner" -I "$work/runtime-contract.py" "$work/$mode-metadata.json" "$version" "$work/$mode.txt"
             "$scanner" -m pip_audit --strict --no-deps --disable-pip -r "$work/$mode.txt" --format json --output "$work/$mode-audit.json"
           done
-          python - <<'PY'
+          "$scanner" -I - <<'PY'
           import json,os,pathlib
+          from packaging.utils import canonicalize_name
           w=pathlib.Path(os.environ["RUNNER_TEMP"])
           for n in ("npm-source","npm-consumer"):
               a=json.loads((w/(n+".json")).read_text())
-              assert not a.get("error") and a["metadata"]["vulnerabilities"]["total"]==0 and not a["vulnerabilities"]
-              print(n,json.dumps(a["metadata"],sort_keys=True))
+              assert not a.get("error") and a["metadata"]["vulnerabilities"]["total"]==0 and not a["vulnerabilities"],n
+              print("AUDIT_PASS",n,json.dumps(a["metadata"],sort_keys=True))
           for n,count in (("tools",50),("source",1),("consumer",1)):
               a=json.loads((w/(n+"-audit.json")).read_text())
               rows=a["dependencies"]
-              assert len(rows)==count and all(not x.get("skip_reason") and x.get("vulns")==[] for x in rows)
-              print(n,json.dumps(rows,sort_keys=True))
+              expected={canonicalize_name(x.split("==")[0]):x.split("==")[1] for x in (w/(n+".txt")).read_text().splitlines() if x}
+              assert len(expected)==count and len(rows)==count,n
+              assert all(not x.get("skip_reason") and x.get("vulns")==[] for x in rows),n
+              assert {canonicalize_name(x["name"]):x["version"] for x in rows}==expected,n
+              print("AUDIT_PASS",n,json.dumps(rows,sort_keys=True))
           print("FIVE_ADVISORY_GRAPHS_PASS")
           PY
