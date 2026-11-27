@@ -2,6 +2,12 @@
 
 This directory is the **Git-tracked development knowledge base** for KronOTP, not a private scratchpad and not the end-user manual. It records the implementation as it really exists, enabling developers to understand and maintain every feature, function, module and release workflow without guessing.
 
+## Current frozen baseline — read first
+
+**[KronOTP 2026-11-28 source/phase baseline](./BASELINE_2026-11-28.md)** records the real source SHA, published APIs, GUI, release, CI, open gates and mandatory resume checks. **[Per-file SHA inventory](./BASELINE_FILE_INVENTORY_2026-11-28.md)** fingerprints all 51 original tracked files. The audited source commit and documentation-only freeze commit are **different**.
+
+**Verification boundary:** On 2026-11-28 GitHub main was audited live, but the authorized Windows clone was offline; full local clean parity is not verified. P03 governance/security acceptance remains blocked.
+
 ## What belongs here
 - Architecture, module boundaries, configuration and data/control flow.
 - Exact source file/function locations and API behavior, including differences between languages.
@@ -17,6 +23,6 @@ This directory is the **Git-tracked development knowledge base** for KronOTP, no
 5. Do not insert private plans, credentials or raw local notes. Reference source paths instead of making unsupported claims.
 
 ## Reading order
-[Architecture](./ARCHITECTURE.md) → [File map](./FILE_MAP.md) → [Function reference](./FUNCTION_REFERENCE.md) → [CI/release](./CI_AND_RELEASE.md) → [Quality & gaps](./QUALITY_AND_SECURITY.md) → [Development history](./DEVELOPMENT_LOG.md).
+[Current frozen baseline](./BASELINE_2026-11-28.md) → [Source file inventory](./BASELINE_FILE_INVENTORY_2026-11-28.md) → [Architecture](./ARCHITECTURE.md) → [File map](./FILE_MAP.md) → [Function reference](./FUNCTION_REFERENCE.md) → [CI/release](./CI_AND_RELEASE.md) → [Quality & gaps](./QUALITY_AND_SECURITY.md) → [Development history](./DEVELOPMENT_LOG.md).
 
 User instructions live in [`docs/`](../docs/index.md). Project-wide rules live in [`AGENTS.md`](../AGENTS.md) and [`AI_INSTRUCTIONS.md`](../AI_INSTRUCTIONS.md).

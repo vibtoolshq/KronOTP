@@ -120,3 +120,7 @@ python python/tests/gui/app.py
 ```
 
 See [Authenticator usage, protection and recovery limitations](./python/tests/gui/README.md). **This is a production-oriented application, not independently security-certified**; original P03 branch/tag governance and P04 broader security/platform assurance remain uncompleted.
+
+## Current frozen baseline for maintainers and AI agents (2026-11-28)
+
+Before another update, read the [source/phase forensic baseline](./project/BASELINE_2026-11-28.md) and [exact 51-file Git SHA inventory](./project/BASELINE_FILE_INVENTORY_2026-11-28.md). They identify the current authoritative GitHub source snapshot separately from historic release and CI evidence. **The local Windows clone was offline on 2026-11-28; do not assume local parity.** No source/API/GUI/package release is changed by the baseline documentation.

@@ -55,6 +55,8 @@ Source-of-truth: initial architecture baseline `50df7c42c0d1d83d21fe68097e0d70e4
 | `project/CI_AND_RELEASE.md` | CI trigger/step/release pipeline internals |
 | `project/QUALITY_AND_SECURITY.md` | Actual test coverage, known gaps, security boundaries |
 | `project/DEVELOPMENT_LOG.md` | Phases/commits/change history and ongoing update log |
+| `project/BASELINE_2026-11-28.md` | Read-first dated source/phase forensic baseline, release/CI truth, unresolved gates and resume requirements |
+| `project/BASELINE_FILE_INVENTORY_2026-11-28.md` | Exact blob SHA/size inventory of 51 source-snapshot files, for future Git drift analysis |
 | `notes/` | Private local-only working folder; **never included in Git or published archives** |
 
 The above is a map, not a claim that engine-level APIs, pages, buttons or databases exist beyond their documented paths. Update this file in the same commit as any future file move/add/remove.
