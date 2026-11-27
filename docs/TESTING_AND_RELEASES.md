@@ -5,9 +5,36 @@ order: 100
 draft: false
 ---
 
+## P05-A06 — consolidated acceptance (2026-11-28)
+
+**Decision:** scoped source and release-tooling qualification is accepted for release preparation; live v2.0.1 publication is **NO-GO** until release-specific mandatory preflight and separate authorization. P01–P04 and P05-A01–A05 scoped remediation are closed. P05-A06 documentation consolidation awaits its protected PR check and verified closeout; G12 final publication acceptance remains open. Published npm/PyPI packages are still 2.0.0. Historical candidate/blocked/OPEN statements below describe their respective checkpoints, not current source status. No source, version or publication change in this documentation update.
+
+| Evidence | Verified result |
+| --- | --- |
+| P04 runtime [46058729635](https://github.com/vibtoolshq/KronOTP/actions/runs/46058729635) | 19 selected targets / 38 source and installed v2 suites; exact Python 3.10.0 on Windows only |
+| P04 security [46059824623](https://github.com/vibtoolshq/KronOTP/actions/runs/46059824623) | Four advisory scopes, zero known vulnerabilities at scan time; three published archive integrity checks |
+| P04 caller [46060701345](https://github.com/vibtoolshq/KronOTP/actions/runs/46060701345) | 24/24 synthetic scenarios; single-process replay/throttle/isolation, not distributed auth |
+| P04 performance [46061887435](https://github.com/vibtoolshq/KronOTP/actions/runs/46061887435) | Two 600-second bounded workloads, zero unexpected errors/mismatches/OOM/timeout; observation only |
+| A01 source fix [46068002722](https://github.com/vibtoolshq/KronOTP/actions/runs/46068002722) | R-04 negative-clock diagnostic corrected in Python generate; 13/13 methods; verify unchanged |
+| A02 packaging [46071499080](https://github.com/vibtoolshq/KronOTP/actions/runs/46071499080) | sdist vector fixture exact; source and derived-wheel suites 13/13 each; 86 vectors each |
+| A03 publisher | Existing organization token architecture retained for preparation; revocation/replacement of historical exposed PyPI token owner-confirmed, actual credentials unverified |
+| A04 [46076859856](https://github.com/vibtoolshq/KronOTP/actions/runs/46076859856) / [46076997809](https://github.com/vibtoolshq/KronOTP/actions/runs/46076997809) | 21/21 synthetic contracts; nonpublishing build and public v2 registry smoke |
+| A05 [46079118728](https://github.com/vibtoolshq/KronOTP/actions/runs/46079118728) / [46079278884](https://github.com/vibtoolshq/KronOTP/actions/runs/46079278884) | 50/50 hash-locked tools, 3/3 byte-identical artifacts in two independent same-commit Linux builds, 8/8 marker fixtures, five advisory graphs zero reported vulnerabilities and zero Python skips; main nonpublishing validation passed |
+
+Historical qualification and remediation evidence above/below is preserved; the original failed [46078021001](https://github.com/vibtoolshq/KronOTP/actions/runs/46078021001) remains a failure (optional extra assertion); the corrected new candidate passed, not a rerun. All 12 original KO findings are addressed within scoped qualification; G01–G11 accepted; G12 publication decision remains NO-GO. This docs-only PR is not a new runtime, security or release test.
+
+- R-04 and the missing sdist test fixture are fixed on current source, not in the immutable published PyPI 2.0.0. Current source Python has 13 test methods, not nine. The historical 19-target qualification was not repeated after the narrow Python fix; later targeted regressions and candidate artifact checks passed.
+- Caller must provide secure secret storage, trustworthy clock, account binding, throttling and atomic durable replay prevention. No distributed authentication, remote login, new GUI test, independent security certification, production capacity/SLA or 24/7 reliability guarantee. Historical minimum-runtime compatibility is not a maintained-runtime recommendation; Python RSS measurement discrepancy remains unresolved.
+- Runtime ranges remain unchanged: npm OTPAuth ^9.6.0; Python PyOTP >=2.12,<3. Latest recorded resolution OTPAuth 9.6.0, @noble/hashes 2.4.0, PyOTP 2.12.2. Advisory evidence is point-in-time (2026-11-27 22:52 UTC), not a guarantee for future dependency resolutions. Reproducibility is same commit, Ubuntu 24.04 x64, controlled Node 24.22.3/npm 11.19.1 and Python 3.12.16 with 50 locked tools; not arbitrary platforms or different commit timestamps.
+- Existing three GitHub rulesets enforce PR/Required CI, restricted tag creation and immutable release tags; no independent reviewer requirement. Organization secret names exist, but actual token validity, package scope, expiration, owner authorization/2FA and current registry publishing policy are unverified. OIDC/signing and provenance limitations were deferred for preparation only, not permanently waived. Historical v2 tag unsigned; publisher attestations not established. Check [npm access-token policy](https://docs.npmjs.com/about-access-tokens/) (direct granular-token publishing scheduled to end January 2027), [npm package policy](https://docs.npmjs.com/policies/dual-use/) and [PyPI publishing guidance](https://docs.pypi.org/publishing/publishing-to-pypi/) before authorizing any publication. No credential disclosure.
+- Release builds once and verifies a SHA-bound immutable bundle, requires absent registry state, publishes independently, reconciles actual bytes and gates automatic exact-version smoke. Two registries are not atomic. Actual tag-triggered publisher authentication, recovery upload and end-to-end post-publication smoke are not yet exercised; synthetic contracts and independent historical smoke do not prove them. Stop on partial, conflict or uncertainty; preserve run artifacts/manifest before expiry and require separate recovery authorization; no blind rerun, overwrite, unpublish or tag movement.
+
+**Release-preflight (separate approval):** confirm actual owner/token scope, expiry/validity, 2FA and package-specific direct-publish policy using safe nonmutating evidence; explicitly resolve remaining signing/provenance and shared-credential risk for the intended release, without silent waiver. Require v2.0.1 absent or formally reconciled in both registries and new tag absent; both exact public version endpoints returned 404 on 2026-11-27 at 22:58 UTC, not a reservation. Align both manifests and npm root lock version in a separately approved version-only change. Verify fresh exact-version candidate regressions, package metadata/fixture/RECORD, actual dependency advisories, controlled toolchain and release validation on the accepted main SHA. No publishing on branch/PR/manual validation. Only after preflight and explicit release authorization may the authorized tag creator create/push the new stable tag; verify all three registry artifacts and actual post-publish smoke before claiming release success. No automatic partial recovery.
+
+
 ## P04 consolidated qualification — 2026-11-28
 
-**Current status (2026-11-28):** P01–P03 closed; P04 qualification evidence verified and consolidation acceptance pending this documentation PR and final closeout. P05 final production/release acceptance has not started. Older dated statements below about deferred governance, unexecuted P04 tests or offline clone are historical, not current status. No new package release or application change.
+**Historical P04 consolidation checkpoint:** P01–P03 were closed; P04 acceptance was pending at that checkpoint. P04 is now closed; see the current P05-A06 decision above.
 
 | Qualification | Recorded run | Actual result |
 | --- | --- | --- |
@@ -31,7 +58,7 @@ All four qualification workflows are PR-only with scoped paths, pinned actions a
 | Windows GUI/vault | `python/tests/gui/test_app.py` | repository root | `python -m unittest discover -s python/tests/gui -p test_app.py -v` with Tkinter, Windows DPAPI and installed public PyPI 2.0.0 |
 | Public package smoke | `.github/workflows/registry-smoke.yml` | GitHub Actions | Manually enter published stable `version`; no registry publication |
 
-The Node/Python core suites share `python/tests/totp_vectors.json` (six RFC6238 SHA1 six-digit fixed-time reference values + 80 synthetic cross-language keys/times/codes), and test formatting, input constraints, 30-second rollovers and adjacent-window decisions. The Python core suite has **nine** `unittest` methods. The GUI Windows suite has **eight** methods testing user-bound encryption and UI state. Count is method count, not number of individual vector cases.
+The Node/Python core suites share `python/tests/totp_vectors.json` (six RFC6238 SHA1 six-digit fixed-time reference values + 80 synthetic cross-language keys/times/codes), and test formatting, input constraints, 30-second rollovers and adjacent-window decisions. The current source Python core suite has **13** `unittest` methods (nine before A01). The GUI Windows suite has **eight** methods testing user-bound encryption and UI state. Count is method count, not number of individual vector cases.
 
 The GUI test suite is **not** invoked by the existing Linux Python CI job. Node source tests depend on the full monorepo fixture; package publishing does **not** bundle that fixture as a public runtime dependency.
 
