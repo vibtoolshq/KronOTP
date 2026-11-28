@@ -99,3 +99,10 @@ New paths: `scripts/release/registry_contract.py`, `qualification/p05-a04/test_r
 ## P05-A05 — controlled release tooling (2026-11-28)
 
 New paths: `scripts/release/requirements-build.lock` and `.github/workflows/p05-a05-toolchain.yml`. Release builds and Python publishing use isolated hash-locked tooling (50 exact package versions including build, setuptools, wheel, Twine, pip and pip-audit). Controlled Ubuntu 24.04 x64, Node 24.22.3/npm 11.19.1 and CPython 3.12.16. Build subprocesses use the locked interpreter without backend isolation/downloads. The sdist preserves verified member bytes while canonicalizing tar/gzip headers and ordering with commit-derived SOURCE_DATE_EPOCH; wheel built from that sdist. Dedicated PR qualification compares two independent fresh venv/build roots for byte-identical artifacts and checks source/installed-candidate npm/Python runtime and tooling advisory graphs. Runtime dependency ranges, engine and publishing credentials unchanged. Scope is controlled same-commit Linux rebuild, not universal reproducibility or permanent vulnerability guarantee. Production use maintained security-patched runtimes; historical compatibility is not lifecycle support. Qualification pending CI; no live publication. Token validity and registry policy remain mandatory release-preflight.
+
+
+## BASELINE-FREEZE-02 — post-v2.0.1 (2026-11-28)
+
+**[Current post-v2.0.1 baseline](./BASELINE_POST_V2_0_1.md)** and **[68-file exact pre-freeze inventory](./BASELINE_FILE_INVENTORY_POST_V2_0_1.md)** are the continuation references. The historical v2.0.0 baseline and inventory remain immutable evidence, not current status. Incoming GitHub/local/origin parity verified clean; published v2.0.1 npm/PyPI exact bytes verified; G12 accepted via recovery. Resolve the final protected documentation-freeze merge before beginning the next phase.
+
+Six documentation paths only; exact incoming SHA `f23a9739efdeadde17a8562ab49f8506a5eba7bc`, tree `94328f842bb6a6308b1b293db12993d4ce05e6e9`; no code, tests, build, version or release change. Final freeze acceptance requires protected PR Required CI and final clean parity.
