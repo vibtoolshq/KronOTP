@@ -1,7 +1,7 @@
 # KronOTP — Post-v2.0.1 exact source-tree inventory
 
-**Audited incoming commit:** `f23a9739efdeadde17a8562ab49f8506a5eba7bc`  
-**Git tree:** `94328f842bb6a6308b1b293db12993d4ce05e6e9`  
+**Audited incoming commit:** `f23a9739efdeadde17a8562ab49f8506a5eba7bc`
+**Git tree:** `94328f842bb6a6308b1b293db12993d4ce05e6e9`
 **Observation:** 2026-11-28 00:03 UTC (06:03 Asia/Dhaka).
 
 Nontruncated [GitHub recursive tree](https://api.github.com/repos/vibtoolshq/KronOTP/git/trees/94328f842bb6a6308b1b293db12993d4ce05e6e9?recursive=1): 68 blobs, 18 directories. All 68 paths/modes/blob SHA-1s/byte sizes matched local `git ls-tree -r -l HEAD`. Git blob IDs are not raw-file SHA-256. This is an immutable **pre-freeze** inventory; the six documentation paths in the freeze PR intentionally change or add entries afterward. The final continuation commit is obtained from that merged PR, not from a self-referential hash in this file.

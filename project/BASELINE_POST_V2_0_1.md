@@ -1,7 +1,7 @@
 # KronOTP — Post-v2.0.1 canonical continuation baseline
 
-**Baseline ID:** BASELINE-FREEZE-02  
-**Audited:** 2026-11-28 (Asia/Dhaka); live Git/governance observations 00:02:52 UTC and registry bytes 00:03:18 UTC.  
+**Baseline ID:** BASELINE-FREEZE-02
+**Audited:** 2026-11-28 (Asia/Dhaka); live Git/governance observations 00:02:52 UTC and registry bytes 00:03:18 UTC.
 **Status:** source/published v2.0.1 scoped acceptance GO; baseline documentation closure requires protected PR Required CI and clean final Git parity. This is the current reference, superseding the earlier v2.0.0 snapshot for continuation only.
 
 ## 1. Read first — three distinct anchors
