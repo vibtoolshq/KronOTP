@@ -1,6 +1,6 @@
 # Project Folder MINIFEST
 
-Inventory of **all direct entries** of `project/` as of the 2026-11-28 baseline freeze. No subfolders are created.
+Inventory of **all direct entries** of `project/` as of BASELINE-FREEZE-02; dated historical entries are retained. No subfolders are created.
 
 | Entry | Type | Scope / phase | Details |
 | --- | --- | --- | --- |
@@ -14,6 +14,8 @@ Inventory of **all direct entries** of `project/` as of the 2026-11-28 baseline 
 | `DEVELOPMENT_LOG.md` | Markdown | Phases 01–05, release, documentation setup | Confirmed changes/commits, status, ongoing log contract |
 | `BASELINE_2026-11-28.md` | Markdown | 2026-11-28 source freeze | GitHub evidence-based exact state, API/CI/release, open gates, resume protocol |
 | `BASELINE_FILE_INVENTORY_2026-11-28.md` | Markdown | 2026-11-28 Git tree inventory | All 51 pre-freeze source paths, blob SHAs, sizes and drift procedure |
+| `BASELINE_POST_V2_0_1.md` | Markdown | Current baseline | Evidence-backed release and continuation snapshot |
+| `BASELINE_FILE_INVENTORY_POST_V2_0_1.md` | Markdown | Current source inventory | Exact 68 incoming Git blobs and sizes |
 
 Update this index **in the same commit** whenever a direct entry changes. Never include `notes/` content here.
 
